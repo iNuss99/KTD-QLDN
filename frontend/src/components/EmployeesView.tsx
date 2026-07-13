@@ -543,7 +543,7 @@ export default function EmployeesView({
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
-                        placeholder="j.doe@techretail.com"
+                        placeholder="j.doe@ktd.com"
                       />
                     </div>
 

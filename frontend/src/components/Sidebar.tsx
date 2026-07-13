@@ -64,8 +64,8 @@ export default function Sidebar({
             />
           </div>
           <div>
-            <h1 className="font-semibold text-[17px] tracking-tight leading-none text-white">TechRetail ERP</h1>
-            <p className="text-[11px] text-slate-400 mt-1">Enterprise Suite</p>
+            <h1 className="font-semibold text-[17px] tracking-tight leading-none text-white">Kingdom Trust Division</h1>
+            <p className="text-[11px] text-slate-400 mt-1">KTD Enterprise</p>
           </div>
         </div>
         

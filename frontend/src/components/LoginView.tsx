@@ -62,7 +62,7 @@ export default function LoginView() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-          TechRetail ERP
+          Kingdom Trust Division
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           Hệ thống quản lý nguồn lực doanh nghiệp bán lẻ
@@ -92,7 +92,7 @@ export default function LoginView() {
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
                       : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
                   }`}
-                  placeholder="admin@techretail.local"
+                  placeholder="admin@ktd.local"
                 />
               </div>
               {errors.email && (
