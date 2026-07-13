@@ -1,0 +1,6 @@
+{
+  "name": "TechRetail ERP",
+  "description": "An enterprise-grade administrative and financial management portal for TechRetail, featuring dashboard analytics, employee directory management, permission matrices, and detailed financial reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

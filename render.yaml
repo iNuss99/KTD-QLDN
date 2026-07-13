@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: techretail-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false   # Set manually in Render dashboard
+      - key: Jwt__Key
+        sync: false   # Set manually in Render dashboard
+      - key: Jwt__Issuer
+        value: TechRetailApi
+      - key: Jwt__Audience
+        value: TechRetailClient
+      - key: AllowedOrigins
+        sync: false   # Set manually after Vercel deploy
