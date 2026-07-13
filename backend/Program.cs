@@ -45,18 +45,12 @@ builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IProductsService, ProductsService>();
 
-// Add CORS — read allowed origins from env (comma-separated)
-var allowedOriginsConfig = builder.Configuration["AllowedOrigins"];
-var allowedOrigins = !string.IsNullOrEmpty(allowedOriginsConfig)
-    ? allowedOriginsConfig.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-    : new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:3001" };
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins(allowedOrigins)
+            policy.SetIsOriginAllowed(_ => true) // Allow any origin dynamically
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();
