@@ -63,9 +63,9 @@ export default function Sidebar({
               src="/logo.png"
             />
           </div>
-          <div>
-            <h1 className="font-semibold text-[17px] tracking-tight leading-none text-white">Kingdom Trust Division</h1>
-            <p className="text-[11px] text-slate-400 mt-1">KTD Enterprise</p>
+          <div className="min-w-0">
+            <h1 className="font-semibold text-[14px] tracking-tight leading-none text-white whitespace-nowrap">Kingdom Trust Division</h1>
+            <p className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">KTD Enterprise</p>
           </div>
         </div>
         
