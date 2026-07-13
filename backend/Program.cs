@@ -99,4 +99,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Health check endpoint for UptimeRobot
+app.MapGet("/", () => "Kingdom Trust Division API is running!");
+
 app.Run();
