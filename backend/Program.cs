@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using techretail_api.Data;
-using techretail_api.Database.Seeders;
-using techretail_api.Interceptors;
+using techretail_api.Infrastructure.Data;
+using techretail_api.Infrastructure.Database.Seeders;
+using techretail_api.Core.Interceptors;
 using techretail_api.Repositories;
 using techretail_api.Services;
 

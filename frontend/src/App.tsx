@@ -18,19 +18,19 @@ import {
   Search
 } from 'lucide-react';
 
-import Sidebar from './components/Sidebar';
-import TopBar from './components/TopBar';
-import ForceChangePasswordView from './components/ForceChangePasswordView';
-import DashboardView from './components/DashboardView';
-import EmployeesView from './components/EmployeesView';
-import PermissionsView from './components/PermissionsView';
-import FinanceView from './components/FinanceView';
-import OrdersView from './components/OrdersView';
-import ProductsView from './components/ProductsView';
-import NewReportModal from './components/NewReportModal';
-import LoginView from './components/LoginView';
-import SettingsView from './components/SettingsView';
-import StaffSalesReportView from './components/StaffSalesReportView';
+import Sidebar from './layouts/Sidebar';
+import TopBar from './layouts/TopBar';
+import ForceChangePasswordView from './pages/auth/ForceChangePasswordView';
+import DashboardView from './pages/dashboard/DashboardView';
+import EmployeesView from './pages/employees/EmployeesView';
+import PermissionsView from './pages/employees/PermissionsView';
+import FinanceView from './pages/finance/FinanceView';
+import OrdersView from './pages/orders/OrdersView';
+import ProductsView from './pages/products/ProductsView';
+import NewReportModal from './components/common/NewReportModal';
+import LoginView from './pages/auth/LoginView';
+import SettingsView from './pages/settings/SettingsView';
+import StaffSalesReportView from './pages/settings/StaffSalesReportView';
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 
@@ -38,7 +38,7 @@ import { Employee, PermissionRow, Activity } from './types';
 import {
   INITIAL_PERMISSIONS,
   INITIAL_ACTIVITIES
-} from './data';
+} from './utils/data';
 import api from './api';
 
 export default function App() {

@@ -1,7 +1,7 @@
-using techretail_api.Attributes;
+using techretail_api.Core.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using techretail_api.Models;
+using techretail_api.Core.Models;
 using techretail_api.Services;
 
 using System.Security.Claims;

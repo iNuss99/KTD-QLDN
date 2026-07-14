@@ -1,4 +1,4 @@
-using techretail_api.Models;
+using techretail_api.Core.Models;
 
 namespace techretail_api.Services
 {

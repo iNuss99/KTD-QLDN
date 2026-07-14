@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using techretail_api.Repositories;
-using techretail_api.Models;
+using techretail_api.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace techretail_api.Controllers

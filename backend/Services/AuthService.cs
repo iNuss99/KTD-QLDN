@@ -2,7 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using techretail_api.Models;
+using techretail_api.Core.Models;
 using techretail_api.Repositories;
 
 namespace techretail_api.Services

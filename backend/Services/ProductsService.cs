@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using techretail_api.Data;
-using techretail_api.Models;
+using techretail_api.Infrastructure.Data;
+using techretail_api.Core.Models;
 
 namespace techretail_api.Services
 {

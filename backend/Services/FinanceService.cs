@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using techretail_api.Data;
+using techretail_api.Infrastructure.Data;
 
 namespace techretail_api.Services
 {
@@ -7,7 +7,7 @@ namespace techretail_api.Services
     {
         Task<IEnumerable<object>> GetMonthlyGrowthAsync();
         Task<IEnumerable<object>> GetExpenseCategoriesAsync();
-        Task<techretail_api.Models.Expense> AddExpenseAsync(techretail_api.Models.Expense expense);
+        Task<techretail_api.Core.Models.Expense> AddExpenseAsync(techretail_api.Core.Models.Expense expense);
     }
 
     public class FinanceService : IFinanceService
@@ -138,7 +138,7 @@ namespace techretail_api.Services
             return result;
         }
 
-        public async Task<techretail_api.Models.Expense> AddExpenseAsync(techretail_api.Models.Expense expense)
+        public async Task<techretail_api.Core.Models.Expense> AddExpenseAsync(techretail_api.Core.Models.Expense expense)
         {
             if (string.IsNullOrEmpty(expense.Category))
                 throw new ArgumentException("Category is required");

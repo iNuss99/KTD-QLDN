@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using techretail_api.Data;
+using techretail_api.Infrastructure.Data;
 
 namespace techretail_api.Repositories
 {
