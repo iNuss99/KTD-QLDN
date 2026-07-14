@@ -1,3 +1,4 @@
+using techretail_api.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using techretail_api.Models;
@@ -87,6 +88,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet]
+        [RequiresPermission("perm-3")]
         public async Task<ActionResult<PagedResult<User>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50, [FromQuery] int? role = null, [FromQuery] string? department = null, [FromQuery] bool? isActive = null)
         {
             if (pageSize > 100) pageSize = 100;
@@ -136,7 +138,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [RequiresPermission("perm-4")]
+        
         public async Task<ActionResult<object>> PostUser([FromBody] CreateUserRequest request)
         {
             if (!await CheckRoleHierarchy(request.RoleId, request.Department))
@@ -174,7 +177,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [RequiresPermission("perm-4")]
+        
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
         {
             var targetUser = await _userService.GetUserByIdAsync(id);
@@ -210,7 +214,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("{id}/reset-password")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<ActionResult<object>> ResetPassword(Guid id)
         {
             var targetUser = await _userService.GetUserByIdAsync(id);
@@ -228,7 +232,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPatch("{id}/deactivate")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> DeactivateUser(Guid id)
         {
             if (IsSelf(id))
@@ -249,7 +253,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [RequiresPermission("perm-4")]
+        
         public async Task<IActionResult> DeleteUser(Guid id)
         {
             if (IsSelf(id))
@@ -276,7 +281,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("bulk-regenerate-password")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> BulkRegeneratePassword([FromBody] BulkRegeneratePasswordRequest request)
         {
             var passwords = await _userService.BulkRegeneratePasswordAsync(request.UserIds);
@@ -284,7 +289,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("bulk-import")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> BulkImportPreview(IFormFile file)
         {
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
@@ -325,7 +330,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("bulk-import/confirm")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> BulkImportConfirm([FromBody] List<CreateUserRequest> request)
         {
             var validDepartments = new[] { "Sales", "Logistics", "Finance", "Board of Directors" };
@@ -358,7 +363,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPatch("bulk-update")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> BulkUpdate([FromBody] BulkUpdateRequest request)
         {
             var filteredUserIds = new List<Guid>();
@@ -415,3 +420,4 @@ namespace techretail_api.Controllers
         public bool? IsActive { get; set; }
     }
 }
+

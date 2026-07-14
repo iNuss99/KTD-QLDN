@@ -12,10 +12,13 @@ import {
   Settings,
   HelpCircle,
   X,
-  Package,
+  ShoppingCart,
+  Boxes,
   BarChart3
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+
+import { PermissionRow } from '../types';
 
 interface SidebarProps {
   currentTab: string;
@@ -23,6 +26,7 @@ interface SidebarProps {
   onOpenNewReport: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  permissions: PermissionRow[];
 }
 
 export default function Sidebar({
@@ -30,33 +34,52 @@ export default function Sidebar({
   setCurrentTab,
   onOpenNewReport,
   isOpenMobile = false,
-  onCloseMobile
+  onCloseMobile,
+  permissions,
 }: SidebarProps) {
   const user = useAuthStore((state) => state.user);
 
-  const isAdminOrManager = user?.role?.includes('Quản lý') || user?.role?.includes('Giám đốc') || user?.role?.includes('Quản trị') || user?.role === 'Admin' || user?.role === 'Manager';
-  const isFinanceVisible = user?.role?.includes('Giám đốc') || user?.role?.includes('Quản trị') || user?.role?.includes('Kiểm toán') || user?.role === 'Admin' || user?.role === 'Accountant' || user?.role === 'Manager';
-  const isInventoryVisible = isAdminOrManager || user?.role === 'Warehouse Staff' || user?.role === 'Accountant';
-  const isSalesStaff = user?.role === 'Sales Staff';
-  const isDashboardVisible = isAdminOrManager || user?.role === 'Accountant';
-  const isOrdersVisible = isAdminOrManager || user?.role === 'Sales Staff' || user?.role === 'Warehouse Staff' || user?.role === 'Accountant';
+  // Map backend role names to PermissionRow keys
+  const getRoleKey = (roleName?: string): keyof PermissionRow | null => {
+    if (!roleName) return null;
+    if (roleName === 'Admin' || roleName.includes('Quản trị')) return 'admin';
+    if (roleName === 'Manager' || roleName.includes('Quản lý') || roleName.includes('Giám đốc')) return 'manager';
+    if (roleName === 'Accountant' || roleName.includes('Kế toán') || roleName.includes('Kiểm toán')) return 'accountant';
+    if (roleName === 'Sales Staff' || roleName.includes('Bán hàng')) return 'salesStaff';
+    if (roleName === 'Warehouse Staff' || roleName.includes('Kho')) return 'warehouseStaff';
+    return null;
+  };
+
+  const roleKey = getRoleKey(user?.role);
+
+  // Check if user has ANY permission in a specific module
+  const hasModuleAccess = (moduleName: string) => {
+    if (!roleKey) return false;
+    return permissions.some(p => p.module === moduleName && p[roleKey] === true);
+  };
+
+  const isFinanceVisible = hasModuleAccess('Finance');
+  const isInventoryVisible = hasModuleAccess('Inventory');
+  const isOrdersVisible = hasModuleAccess('Orders');
+  const isHRVisible = hasModuleAccess('HR');
+  const isAdminOrManager = roleKey === 'admin' || roleKey === 'manager'; // For special admin tabs
 
   const menuItems = [
-    ...(isDashboardVisible ? [{ id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard }] : []),
-    ...(isOrdersVisible ? [{ id: 'orders', label: 'Đơn hàng', icon: Package }] : []),
-    ...(isInventoryVisible ? [{ id: 'products', label: 'Tồn kho', icon: Package }] : []),
-    ...(isAdminOrManager ? [{ id: 'employees', label: 'Nhân sự', icon: Users }] : []),
+    ...(roleKey ? [{ id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard }] : []),
+    ...(isOrdersVisible ? [{ id: 'orders', label: 'Đơn hàng', icon: ShoppingCart }] : []),
+    ...(isInventoryVisible ? [{ id: 'products', label: 'Tồn kho', icon: Boxes }] : []),
+    ...(isHRVisible ? [{ id: 'employees', label: 'Nhân sự', icon: Users }] : []),
     ...(isAdminOrManager ? [{ id: 'permissions', label: 'Phân quyền', icon: ShieldCheck }] : []),
     ...(isFinanceVisible ? [{ id: 'finance', label: 'Tài chính', icon: CreditCard }] : []),
-    ...(isSalesStaff ? [{ id: 'staff-report', label: 'Báo cáo cá nhân', icon: BarChart3 }] : []),
+    ...(roleKey === 'salesStaff' ? [{ id: 'staff-report', label: 'Báo cáo cá nhân', icon: BarChart3 }] : []),
   ];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#0f172a] text-slate-200 p-4">
+    <div className="flex flex-col h-full bg-neutral-950 text-slate-200 p-4">
       {/* Brand Header */}
       <div className="flex items-center justify-between gap-3 mb-8 px-2 mt-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-md">
             <img
               alt="KD Logo"
               className="w-full h-full object-cover"
@@ -65,7 +88,7 @@ export default function Sidebar({
           </div>
           <div className="min-w-0">
             <h1 className="font-semibold text-[14px] tracking-tight leading-none text-white whitespace-nowrap">Kingdom Trust Division</h1>
-            <p className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">KTD Enterprise</p>
+            <p className="text-[11px] text-amber-400 mt-1 whitespace-nowrap">KTD Enterprise</p>
           </div>
         </div>
         
@@ -86,7 +109,7 @@ export default function Sidebar({
           onOpenNewReport();
           if (onCloseMobile) onCloseMobile();
         }}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs py-2 px-3 rounded-lg mb-8 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.98]"
+        className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs py-2 px-3 rounded-lg mb-8 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.98]"
       >
         <Plus size={16} />
         Báo cáo mới
@@ -107,7 +130,7 @@ export default function Sidebar({
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer active:scale-[0.98] ${
                     isActive
-                      ? 'text-white bg-indigo-600 font-semibold shadow-sm'
+                      ? 'text-white bg-amber-600 font-semibold shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
@@ -163,7 +186,7 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop sidebar (fixed on left) */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 shadow-md bg-[#0f172a] z-40 border-r border-slate-800">
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 shadow-md bg-neutral-950 z-40 border-r border-slate-800">
         {sidebarContent}
       </aside>
 
@@ -176,7 +199,7 @@ export default function Sidebar({
             onClick={onCloseMobile}
           />
           {/* Sidebar drawer panel */}
-          <div className="relative flex flex-col w-64 max-w-xs bg-[#0f172a] h-full shadow-xl transition-transform duration-300 transform translate-x-0">
+          <div className="relative flex flex-col w-64 max-w-xs bg-neutral-950 h-full shadow-xl transition-transform duration-300 transform translate-x-0">
             {sidebarContent}
           </div>
         </div>

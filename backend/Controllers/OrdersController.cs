@@ -1,3 +1,4 @@
+using techretail_api.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet]
+        [RequiresPermission("perm-5")]
         public async Task<ActionResult<PagedResult<Order>>> GetOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 50, [FromQuery] string? status = null, [FromQuery] string? search = null)
         {
             if (pageSize > 100) pageSize = 100;
@@ -29,7 +31,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager,Sales Staff")]
+        [RequiresPermission("perm-6")]
+        
         public async Task<ActionResult<Order>> PostOrder(Order order)
         {
             try
@@ -44,7 +47,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Roles = "Admin,Manager,Sales Staff")]
+        [RequiresPermission("perm-6")]
+        
         public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] UpdateStatusRequest request)
         {
             try
@@ -62,7 +66,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [RequiresPermission("perm-6")]
+        
         public async Task<IActionResult> DeleteOrder(Guid id)
         {
             try
@@ -83,3 +88,4 @@ namespace techretail_api.Controllers
         public string? Reason { get; set; }
     }
 }
+

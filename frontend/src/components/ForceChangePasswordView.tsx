@@ -90,7 +90,7 @@ export default function ForceChangePasswordView() {
                   className={`block w-full pl-10 sm:text-sm rounded-md py-2 px-3 border focus:outline-none transition-colors ${
                     errors.oldPassword
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
-                      : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
+                      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500 bg-white'
                   }`}
                   placeholder="••••••••"
                 />
@@ -118,7 +118,7 @@ export default function ForceChangePasswordView() {
                   className={`block w-full pl-10 sm:text-sm rounded-md py-2 px-3 border focus:outline-none transition-colors ${
                     errors.newPassword
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
-                      : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
+                      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500 bg-white'
                   }`}
                   placeholder="Mật khẩu mới (ít nhất 6 ký tự)"
                 />
@@ -146,7 +146,7 @@ export default function ForceChangePasswordView() {
                   className={`block w-full pl-10 sm:text-sm rounded-md py-2 px-3 border focus:outline-none transition-colors ${
                     errors.confirmPassword
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
-                      : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
+                      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500 bg-white'
                   }`}
                   placeholder="Nhập lại mật khẩu mới"
                 />
@@ -160,7 +160,7 @@ export default function ForceChangePasswordView() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

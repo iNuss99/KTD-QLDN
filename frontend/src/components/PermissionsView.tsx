@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, Filter, Search, RotateCcw, Save, Check } from 'lucide-react';
 import { PermissionRow } from '../types';
 
@@ -13,6 +13,7 @@ interface PermissionsViewProps {
   onResetPermissions: () => void;
   onShowNotification: (message: string) => void;
   searchTerm: string;
+  canEdit?: boolean;
 }
 
 export default function PermissionsView({
@@ -20,7 +21,8 @@ export default function PermissionsView({
   onUpdatePermissions,
   onResetPermissions,
   onShowNotification,
-  searchTerm
+  searchTerm,
+  canEdit = false
 }: PermissionsViewProps) {
   // Local active module filter
   const [activeModuleFilter, setActiveModuleFilter] = useState<'All' | 'Orders' | 'Finance' | 'HR' | 'Inventory'>('All');
@@ -29,12 +31,12 @@ export default function PermissionsView({
   const [draftPermissions, setDraftPermissions] = useState<PermissionRow[]>(permissions);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
 
-  // Sync draft whenever parent permissions update
-  useState(() => {
+  // Sync draft whenever parent permissions update (e.g. after API load)
+  useEffect(() => {
     setDraftPermissions(permissions);
-  });
+  }, [permissions]);
 
-  const handleCheckboxChange = (rowId: string, role: 'superAdmin' | 'storeManager' | 'salesStaff' | 'inventorySpecialist' | 'itSupport' | 'regionalDirector' | 'auditor' | 'floorStaff') => {
+  const handleCheckboxChange = (rowId: string, role: 'admin' | 'manager' | 'accountant' | 'salesStaff' | 'warehouseStaff') => {
     const updated = draftPermissions.map((row) => {
       if (row.id === rowId) {
         return {
@@ -48,13 +50,20 @@ export default function PermissionsView({
   };
 
   const handleReset = () => {
+    if (!canEdit) {
+      onShowNotification('Bạn không có quyền đặt lại ma trận phân quyền.');
+      return;
+    }
     onResetPermissions();
-    // Re-initialize local state
     setDraftPermissions(permissions);
     onShowNotification('Ma trận quyền đã được khôi phục về mặc định hệ thống.');
   };
 
   const handleSave = () => {
+    if (!canEdit) {
+      onShowNotification('Bạn không có quyền thay đổi ma trận phân quyền.');
+      return;
+    }
     onUpdatePermissions(draftPermissions);
     onShowNotification('Chính sách bảo mật và quyền vai trò đã được lưu thành công.');
   };
@@ -72,34 +81,34 @@ export default function PermissionsView({
   const inventoryRows = filteredRows.filter((r) => r.module === 'Inventory');
   const ordersRows = filteredRows.filter((r) => r.module === 'Orders');
 
-  const renderRow = (row: PermissionRow) => {
-    const renderCheckbox = (role: keyof PermissionRow) => {
-      const isDisabled = row.disabledRoles?.includes(role as string);
+  const renderCheckbox = (row: PermissionRow, role: keyof PermissionRow) => {
+      const isDisabled = !canEdit || row.disabledRoles?.includes(role as string);
       return (
         <td key={role} className="p-3.5 text-center">
           <input
             type="checkbox"
             checked={!!row[role]}
             disabled={isDisabled}
-            onChange={() => handleCheckboxChange(row.id, role as any)}
-            className={`w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 focus:ring-1 cursor-pointer disabled:opacity-40 ${
-              isDisabled ? 'cursor-not-allowed text-slate-300 border-slate-200 bg-slate-100' : ''
+            onChange={() => canEdit && handleCheckboxChange(row.id, role as any)}
+            className={`w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500 focus:ring-1 ${
+              isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
             }`}
           />
         </td>
       );
     };
 
+  const renderRow = (row: PermissionRow) => {
     return (
       <tr key={row.id} className="hover:bg-slate-50 border-b border-slate-100 transition-colors">
         <td className="p-3.5 border-r border-slate-100 sticky left-0 bg-white font-medium text-slate-800">
           {row.action}
         </td>
-        {renderCheckbox('admin')}
-        {renderCheckbox('manager')}
-        {renderCheckbox('accountant')}
-        {renderCheckbox('salesStaff')}
-        {renderCheckbox('warehouseStaff')}
+        {renderCheckbox(row, 'admin')}
+        {renderCheckbox(row, 'manager')}
+        {renderCheckbox(row, 'accountant')}
+        {renderCheckbox(row, 'salesStaff')}
+        {renderCheckbox(row, 'warehouseStaff')}
       </tr>
     );
   };
@@ -116,7 +125,8 @@ export default function PermissionsView({
         <div className="flex gap-2 shrink-0 w-full sm:w-auto">
           <button
             onClick={handleReset}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg font-medium text-xs hover:bg-slate-50 transition-colors shadow-sm cursor-pointer active:scale-95"
+            disabled={!canEdit}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg font-medium text-xs hover:bg-slate-50 transition-colors shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             <RotateCcw size={14} />
             Đặt lại
@@ -124,7 +134,8 @@ export default function PermissionsView({
           
           <button
             onClick={handleSave}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium text-xs hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer active:scale-95"
+            disabled={!canEdit}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-600 text-white rounded-lg font-medium text-xs hover:bg-amber-700 transition-colors shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             <Save size={14} />
             Lưu Thay đổi
@@ -145,7 +156,7 @@ export default function PermissionsView({
               type="text"
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-normal text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-normal text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 placeholder-slate-400"
               placeholder="Lọc hành động..."
             />
           </div>
@@ -168,7 +179,7 @@ export default function PermissionsView({
                   onClick={() => setActiveModuleFilter(mod as any)}
                   className={`px-3 py-1 rounded-full font-medium text-[10px] whitespace-nowrap cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
@@ -207,8 +218,8 @@ export default function PermissionsView({
               {/* Group: Orders */}
               {ordersRows.length > 0 && (
                 <>
-                  <tr className="bg-indigo-50/30 border-y border-slate-200">
-                    <td className="p-2 pl-4 font-semibold text-[11px] text-indigo-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
+                  <tr className="bg-amber-50/30 border-y border-slate-200">
+                    <td className="p-2 pl-4 font-semibold text-[11px] text-amber-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
                       Quản lý Đơn hàng
                     </td>
                   </tr>
@@ -219,8 +230,8 @@ export default function PermissionsView({
               {/* Group: Finance */}
               {financeRows.length > 0 && (
                 <>
-                  <tr className="bg-indigo-50/30 border-y border-slate-200">
-                    <td className="p-2 pl-4 font-semibold text-[11px] text-indigo-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
+                  <tr className="bg-amber-50/30 border-y border-slate-200">
+                    <td className="p-2 pl-4 font-semibold text-[11px] text-amber-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
                       Phân hệ Tài chính
                     </td>
                   </tr>
@@ -231,8 +242,8 @@ export default function PermissionsView({
               {/* Group: HR */}
               {hrRows.length > 0 && (
                 <>
-                  <tr className="bg-indigo-50/30 border-y border-slate-200">
-                    <td className="p-2 pl-4 font-semibold text-[11px] text-indigo-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
+                  <tr className="bg-amber-50/30 border-y border-slate-200">
+                    <td className="p-2 pl-4 font-semibold text-[11px] text-amber-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
                       Quản lý Nhân sự
                     </td>
                   </tr>
@@ -243,8 +254,8 @@ export default function PermissionsView({
               {/* Group: Inventory */}
               {inventoryRows.length > 0 && (
                 <>
-                  <tr className="bg-indigo-50/30 border-y border-slate-200">
-                    <td className="p-2 pl-4 font-semibold text-[11px] text-indigo-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
+                  <tr className="bg-amber-50/30 border-y border-slate-200">
+                    <td className="p-2 pl-4 font-semibold text-[11px] text-amber-700 sticky left-0 bg-[#f4f5fd]" colSpan={6}>
                       Tồn kho &amp; Lưu kho
                     </td>
                   </tr>

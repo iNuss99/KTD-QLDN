@@ -201,7 +201,7 @@ export default function DashboardView({
           <button
             onClick={handleDownloadReport}
             disabled={!canViewFinancials || marginData.length === 0}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-indigo-600 text-white font-medium text-xs rounded-lg shadow-sm hover:bg-indigo-700 transition-colors cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-amber-600 text-white font-medium text-xs rounded-lg shadow-sm hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
           >
             <Download size={14} />
             Xuất CSV
@@ -215,7 +215,7 @@ export default function DashboardView({
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition-all duration-300 flex flex-col justify-between h-32 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <p className="text-xs font-semibold text-slate-500">Tổng doanh thu</p>
-            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
+            <div className="p-1.5 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors">
               <DollarSign size={16} />
             </div>
           </div>
@@ -321,8 +321,8 @@ export default function DashboardView({
                   formatter={(value: number, name: string) => [canViewFinancials || name === 'Doanh thu' ? formatVND(value) : '***', name]}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Bar dataKey="amount" name="Doanh thu" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="cost" name="Chi phí" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={40} hide={!canViewFinancials} />
+                <Bar dataKey="amount" name="Doanh thu" fill="#d97706" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="cost" name="Chi phí" fill="#171717" radius={[4, 4, 0, 0]} maxBarSize={40} hide={!canViewFinancials} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -397,7 +397,7 @@ export default function DashboardView({
                 ) : (
                   marginData.map((order, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="px-6 py-3 text-indigo-600 font-semibold">{order.orderCode}</td>
+                      <td className="px-6 py-3 text-amber-600 font-semibold">{order.orderCode}</td>
                       <td className="px-6 py-3">{order.customerName}</td>
                       <td className="px-6 py-3 text-slate-500">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
                       <td className="px-6 py-3 text-right font-semibold text-slate-900">{formatVND(order.revenue)}</td>

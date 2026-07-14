@@ -22,7 +22,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet("staff-sales")]
-        [Authorize(Roles = "Sales Staff,Warehouse Staff,Manager,Admin")] 
+         
         public IActionResult GetStaffSales([FromQuery] string period = "day")
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -77,7 +77,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("staff-sales/submit")]
-        [Authorize(Roles = "Sales Staff,Warehouse Staff,Manager,Admin")] 
+         
         public async Task<IActionResult> SubmitStaffReport([FromBody] SubmitReportRequest request)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -103,7 +103,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet("finance/export")]
-        [Authorize(Roles = "Accountant,Admin,Manager")]
+        
         public async Task<IActionResult> GetFinanceExport()
         {
             var orders = await _orderRepository.Query()

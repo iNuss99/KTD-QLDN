@@ -55,7 +55,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
           {/* Header */}
           <div className="bg-white px-5 py-4 border-b border-slate-100 flex justify-between items-center">
             <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-              <FileText className="text-indigo-600" size={16} />
+              <FileText className="text-amber-600" size={16} />
               Tạo Báo cáo Kiểm toán Tùy chỉnh
             </h3>
             <button
@@ -70,7 +70,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
           {/* Body */}
           {isGenerating ? (
             <div className="p-8 flex flex-col items-center justify-center text-center">
-              <Loader2 className="animate-spin text-indigo-600 mb-4" size={42} />
+              <Loader2 className="animate-spin text-amber-600 mb-4" size={42} />
               <h4 className="text-xs font-bold text-slate-800">Đang tổng hợp Tài sản Doanh nghiệp...</h4>
               <p className="text-[10px] text-slate-500 mt-1 max-w-[250px]">
                 Đang tập hợp hồ sơ sổ cái, nhật ký ca làm việc và ma trận quyền mã hóa đang hoạt động.
@@ -79,11 +79,11 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
               {/* Progress bar */}
               <div className="w-full bg-slate-100 rounded-full h-1.5 mt-6 max-w-xs overflow-hidden">
                 <div 
-                  className="bg-indigo-600 h-1.5 rounded-full transition-all duration-200"
+                  className="bg-amber-600 h-1.5 rounded-full transition-all duration-200"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-[10px] font-bold text-indigo-600 mt-2">{progress}%</span>
+              <span className="text-[10px] font-bold text-amber-600 mt-2">{progress}%</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -98,7 +98,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
                     id="report-type"
                     value={reportType}
                     onChange={(e) => setReportType(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                   >
                     <option value="financial">Sổ cái Doanh thu &amp; Chi phí Tài chính Quý 3</option>
                     <option value="employees">Quản lý Nhân viên &amp; Hồ sơ Ca làm việc</option>
@@ -115,7 +115,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
                     id="report-quarter"
                     value={quarter}
                     onChange={(e) => setQuarter(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                   >
                     <option value="Q3-2026">Quý 3 2026 (Kỳ Hiện tại)</option>
                     <option value="Q2-2026">Quý 2 2026 (Sổ cái Lịch sử)</option>
@@ -133,7 +133,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
                       id="report-format"
                       value={format}
                       onChange={(e) => setFormat(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                     >
                       <option value="pdf">Adobe PDF (.pdf)</option>
                       <option value="csv">Bảng tính Excel (.csv)</option>
@@ -146,7 +146,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
                         type="checkbox"
                         checked={includeAI}
                         onChange={(e) => setIncludeAI(e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 focus:ring-1 cursor-pointer"
+                        className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500 focus:ring-1 cursor-pointer"
                       />
                       <span className="text-[10px] font-bold text-slate-700 flex items-center gap-0.5">
                         <Sparkles size={11} className="text-amber-500" />
@@ -162,7 +162,7 @@ export default function NewReportModal({ onClose, onShowNotification }: NewRepor
               <div className="bg-slate-50 px-5 py-3.5 border-t border-slate-100 flex flex-row-reverse gap-2 rounded-b-xl">
                 <button
                   type="submit"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
                 >
                   Biên dịch &amp; Gửi đi
                 </button>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   FileText,
@@ -127,7 +127,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
         percentage: c.percentage,
         valueFormatted: formatVND(c.value),
         rawValue: c.value,
-        bgClass: index === 0 ? 'bg-indigo-600' : index === 1 ? 'bg-[#c3c0ff]' : index === 2 ? 'bg-[#dae2fd]' : index === 3 ? 'bg-[#cbdbf5]' : 'bg-slate-400'
+        bgClass: index === 0 ? 'bg-amber-600' : index === 1 ? 'bg-[#c3c0ff]' : index === 2 ? 'bg-[#dae2fd]' : index === 3 ? 'bg-[#cbdbf5]' : 'bg-slate-400'
       }));
       setExpenseCategories(mappedCategories);
     } catch (error: any) {
@@ -187,7 +187,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
 
           <button
             onClick={handleExportPDF}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium text-xs hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg font-medium text-xs hover:bg-amber-700 transition-colors shadow-sm cursor-pointer"
           >
             <FileText size={14} />
             Xuất PDF
@@ -316,7 +316,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Lợi Nhuận Gộp</p>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-xl font-extrabold text-slate-900 tracking-tight">{metrics ? formatVND(metrics.grossProfit) : '0 đ'}</span>
-              <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 border border-indigo-100 rounded px-1.5 py-0.5 flex items-center gap-0.5">
+              <span className="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 flex items-center gap-0.5">
                 <Percent size={10} />
                 Biên LN: {metrics ? metrics.margin : 0}%
               </span>
@@ -372,8 +372,8 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
                 iconType="circle"
                 formatter={(value) => <span style={{ color: '#64748b', fontSize: '11px', fontWeight: 600 }}>{value === 'revenue' ? 'Doanh thu' : 'Chi phí'}</span>}
               />
-              <Bar dataKey="revenue" fill="#4f46e5" radius={[2, 2, 0, 0]} maxBarSize={40} />
-              <Bar dataKey="expenses" fill="#c3c0ff" radius={[2, 2, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="revenue" fill="#d97706" radius={[2, 2, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="expenses" fill="#171717" radius={[2, 2, 0, 0]} maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -400,7 +400,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
                 <select 
                   value={expenseForm.category}
                   onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
-                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                   required
                 >
                   <option value="Payroll">Lương (Payroll)</option>
@@ -429,7 +429,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
                       setExpenseForm({...expenseForm, amount: formatted});
                     }}
                     placeholder="Ví dụ: 5,000,000"
-                    className="w-full text-sm pl-8 p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    className="w-full text-sm pl-8 p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                     required
                   />
                 </div>
@@ -441,7 +441,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
                   value={expenseForm.description}
                   onChange={(e) => setExpenseForm({...expenseForm, description: e.target.value})}
                   placeholder="Ghi chú thêm về khoản chi..."
-                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all min-h-[80px] resize-y"
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all min-h-[80px] resize-y"
                 />
               </div>
 
@@ -456,7 +456,7 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   {isSubmitting ? 'Đang lưu...' : 'Lưu Chi Phí'}
                 </button>

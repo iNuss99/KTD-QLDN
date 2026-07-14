@@ -14,6 +14,7 @@ namespace techretail_api.Data
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<SystemLog> SystemLogs { get; set; }
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Expense> Expenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -24,6 +25,9 @@ namespace techretail_api.Data
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Product>().HasIndex(p => p.SKU).IsUnique();
             modelBuilder.Entity<Order>().HasIndex(o => o.OrderCode).IsUnique();
+            modelBuilder.Entity<RolePermission>()
+                .HasIndex(rp => new { rp.PermissionKey, rp.RoleName })
+                .IsUnique();
             
             // Decimal precision
             modelBuilder.Entity<Product>().Property(p => p.CostPrice).HasColumnType("decimal(18,2)");

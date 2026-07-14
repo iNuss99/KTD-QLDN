@@ -13,7 +13,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 's.jenkins@ktd.com',
     role: 'Store Manager',
     department: 'Retail Ops',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuATR2KC_QKoo4kLHGbZgxewNPvh7hDrNtOVSrKdO1yeEHvF5sKAQzsTpDUQVZ93icFYXUelcr2e52usgtqz9r7MjwrvZ1Bb-t-TulL45_a9lD7MJUyZh0TVEZbg9gr_9Mhqek50FeA9LavZVCkoqMUwWs8WrFEGMeVghDKXC3TfEiI9LpYC1eNwu-1u6JGwoMRhfW4TnInWNHP_WL3FhEUEUAUpfrO7ZVw4YlmeR2uu3ZZE3Bivta3nejkpKHdCatpD67E-oqfmDNXY',
     avatarInitials: 'SJ'
   },
@@ -24,7 +24,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'm.chen@ktd.com',
     role: 'Inventory Analyst',
     department: 'Logistics',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDKd6uppsOyMT-wNUNgQ3zWxtqlFNoHXUTLqXPd-cBOEmqpd7JYw6CmVMbdujOFQZN3ArTQQHxSO7vozi1-jokcsmli68cQ80QX0nkV57NDKtj-zWdz-XmHIFOBI5AnyQ0T382fedl0k_kOE1JazkWKPVWmkdVvbXRwXr_hKmNSij1lZ7a9p1rhQkwlL_hOK6n0ajMgJn2VzHrFE4mDJiUs-aT9c9BbDHs6Nze3Lq_jfyhaLjtAQr4t8jucKGnaKbYcnTmxw7pVYfmQ',
     avatarInitials: 'MC'
   },
@@ -35,7 +35,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'e.rodriguez@ktd.com',
     role: 'Regional Director',
     department: 'Executive',
-    status: 'On Leave',
+    status: 'Nghỉ phép',
     avatarInitials: 'EL'
   },
   {
@@ -45,7 +45,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'd.kim@ktd.com',
     role: 'IT Support Spec.',
     department: 'Information Tech',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAYx0BLJ4S0Ut-uuKV50bfGu_iy6kbqJD38yTW-LRxqg7MEJlHpYvz44lLEAsiLJMSMVHLkismwb3CrLQxg7fsDsLwc3h1BwnwGV5eYsok-EO_aGoaxwqd9KCMbPRJOG5Kv5d25rKMJc7qGHtR1uM9nDcaLEblU2GUH_H7eKHosilULZPZpYZj5rUoORdQ_oDtC3XwjIUN4l-OELaEpPgoov7zRRCRLG1y_yjKrc6wtoZZQKQz3krqJiS-eZX__gUlcbdYD4EbzholG',
     avatarInitials: 'DK'
   },
@@ -56,7 +56,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'a.wright@ktd.com',
     role: 'Sales Associate',
     department: 'Retail Ops',
-    status: 'Terminated',
+    status: 'Đã nghỉ việc',
     avatarInitials: 'AW'
   },
   {
@@ -66,7 +66,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'r.taylor@ktd.com',
     role: 'Sales Associate',
     department: 'Retail Ops',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'RT'
   },
   {
@@ -76,7 +76,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'j.miller@ktd.com',
     role: 'HR Specialist',
     department: 'Executive',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'JM'
   },
   {
@@ -86,7 +86,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 't.anderson@ktd.com',
     role: 'Security Engineer',
     department: 'Information Tech',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'TA'
   },
   {
@@ -96,7 +96,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'a.white@ktd.com',
     role: 'Inventory Analyst',
     department: 'Logistics',
-    status: 'On Leave',
+    status: 'Nghỉ phép',
     avatarInitials: 'AW'
   },
   {
@@ -106,7 +106,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'k.martin@ktd.com',
     role: 'Store Manager',
     department: 'Retail Ops',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'KM'
   },
   {
@@ -116,7 +116,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'l.garcia@ktd.com',
     role: 'Auditor',
     department: 'Executive',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'LG'
   },
   {
@@ -126,7 +126,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     email: 'j.wilson@ktd.com',
     role: 'Floor Staff',
     department: 'Retail Ops',
-    status: 'Active',
+    status: 'Đang hoạt động',
     avatarInitials: 'JW'
   }
 ];

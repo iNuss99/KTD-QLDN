@@ -25,7 +25,6 @@ namespace techretail_api.Models
         [MaxLength(100)]
         public string? Department { get; set; }
 
-        [MaxLength(500)]
         public string? AvatarUrl { get; set; }
 
         [MaxLength(100)]

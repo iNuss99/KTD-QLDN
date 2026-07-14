@@ -220,7 +220,7 @@ export default function EmployeesView({
         <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
           <button
             onClick={handleOpenModal}
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-[0.98]"
+            className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-[0.98]"
           >
             <Plus size={16} />
             Thêm Nhân viên
@@ -245,7 +245,7 @@ export default function EmployeesView({
                 }}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer ${
                   departmentFilter === dept
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                    ? 'bg-amber-600 border-amber-600 text-white shadow-sm'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                 }`}
               >
@@ -421,7 +421,7 @@ export default function EmployeesView({
                       onClick={() => setCurrentPage(i + 1)}
                       className={`relative inline-flex items-center px-3 py-1.5 border text-xs font-semibold cursor-pointer ${
                         currentPage === i + 1
-                          ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                          ? 'z-10 bg-amber-50 border-amber-500 text-amber-600'
                           : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -490,9 +490,9 @@ export default function EmployeesView({
                   
                   {/* Photo Upload placeholder */}
                   <div className="flex gap-4 items-center">
-                    <div className="h-16 w-16 rounded-full border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-100 hover:border-indigo-500 transition-all group shrink-0">
-                      <UploadCloud size={18} className="group-hover:text-indigo-600 transition-colors" />
-                      <span className="text-[9px] mt-0.5 group-hover:text-indigo-600 select-none">Ảnh</span>
+                    <div className="h-16 w-16 rounded-full border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-100 hover:border-amber-500 transition-all group shrink-0">
+                      <UploadCloud size={18} className="group-hover:text-amber-600 transition-colors" />
+                      <span className="text-[9px] mt-0.5 group-hover:text-amber-600 select-none">Ảnh</span>
                     </div>
                     <div>
                       <h4 className="text-[11px] font-semibold text-slate-700">Ảnh Đại diện</h4>
@@ -512,7 +512,7 @@ export default function EmployeesView({
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                         placeholder="John"
                       />
                     </div>
@@ -526,7 +526,7 @@ export default function EmployeesView({
                         required
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                         placeholder="Doe"
                       />
                     </div>
@@ -542,7 +542,7 @@ export default function EmployeesView({
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                         placeholder="j.doe@ktd.com"
                       />
                     </div>
@@ -559,7 +559,7 @@ export default function EmployeesView({
                           required
                           value={salary}
                           onChange={(e) => handleSalaryChange(e.target.value)}
-                          className="w-full text-xs px-3 py-2 pr-12 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full text-xs px-3 py-2 pr-12 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="10,000,000"
                         />
                         <span className="absolute right-3 top-2 text-xs text-slate-400 font-medium pointer-events-none">VNĐ</span>
@@ -576,7 +576,7 @@ export default function EmployeesView({
                         id="modal-dept"
                         value={department}
                         onChange={(e) => handleDepartmentChange(e.target.value)}
-                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                       >
                         {Object.keys(departmentRolesMap).map(dept => (
                           <option key={dept} value={dept}>{dept}</option>
@@ -591,7 +591,7 @@ export default function EmployeesView({
                         id="modal-role"
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 bg-slate-50"
+                        className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-800 bg-slate-50"
                       >
                         {departmentRolesMap[department]?.map(r => (
                           <option key={r} value={r}>{r}</option>
@@ -605,7 +605,7 @@ export default function EmployeesView({
                 <div className="bg-slate-50 px-5 py-3.5 border-t border-slate-100 flex flex-row-reverse gap-2 rounded-b-xl">
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
                   >
                     Lưu Nhân viên
                   </button>

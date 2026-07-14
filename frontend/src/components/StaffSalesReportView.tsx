@@ -73,7 +73,7 @@ export default function StaffSalesReportView({ onShowNotification }: StaffSalesR
         </div>
         <div className="flex items-center gap-3">
           <select 
-            className="text-sm border-slate-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 shadow-sm px-3 py-2 border bg-white"
+            className="text-sm border-slate-200 rounded-md focus:border-amber-500 focus:ring-amber-500 shadow-sm px-3 py-2 border bg-white"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
           >
@@ -86,7 +86,7 @@ export default function StaffSalesReportView({ onShowNotification }: StaffSalesR
           <button 
             onClick={handleSubmitReport}
             disabled={submitting}
-            className={`px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md shadow-sm hover:bg-amber-700 transition-colors flex items-center gap-2 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {submitting ? 'Đang gửi...' : 'Gửi báo cáo doanh thu'}
           </button>
@@ -97,7 +97,7 @@ export default function StaffSalesReportView({ onShowNotification }: StaffSalesR
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Orders */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
             <Package size={24} />
           </div>
           <div>

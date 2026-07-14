@@ -27,7 +27,7 @@ interface Order {
     orderDetails?: OrderDetail[];
 }
 
-export default function OrdersView({ onShowNotification, searchTerm }: { onShowNotification: (msg: string, type?: 'success'|'info') => void, searchTerm: string }) {
+export default function OrdersView({ onShowNotification, searchTerm }: { onShowNotification: (msg: string, type?: 'success'|'info'|'error') => void, searchTerm: string }) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -252,7 +252,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                             setNewCustomerName('');
                             setShowNewOrderModal(true);
                         }}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                        className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
                     >
                         <Plus size={16} />
                         <span>Đơn hàng Mới</span>
@@ -267,7 +267,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                         <input 
                             type="text" 
                             placeholder="Tìm kiếm theo mã đơn hàng hoặc khách hàng..."
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
                             value={searchTerm}
                             onChange={() => {}}
                         />
@@ -319,7 +319,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                         <td className="px-4 py-2 text-right">
                                             <button 
                                                 onClick={() => setSelectedOrder(order)} 
-                                                className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+                                                className="text-amber-600 hover:text-amber-800 text-xs font-semibold px-2 py-1 rounded hover:bg-amber-50 transition-colors"
                                             >
                                                 Xem
                                             </button>
@@ -362,7 +362,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                         <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                            <ShoppingCart size={18} className="text-indigo-600" />
+                            <ShoppingCart size={18} className="text-amber-600" />
                             Tạo Đơn Hàng Mới
                         </h3>
                         <button onClick={() => setShowNewOrderModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -379,7 +379,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                     value={newCustomerName}
                                     onChange={(e) => setNewCustomerName(e.target.value)}
                                     placeholder="Ví dụ: Nguyễn Văn A"
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                                     required
                                 />
                             </div>
@@ -388,7 +388,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                 <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Thêm Sản Phẩm (Đồ Điện Tử)</label>
                                 <div className="flex gap-2">
                                     <select 
-                                        className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                        className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                         onChange={(e) => {
                                             handleAddProduct(e.target.value);
                                             e.target.value = "";
@@ -449,7 +449,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                             </tbody>
                                         </table>
                                         <div className="px-4 py-3 bg-slate-50 text-right font-medium text-slate-800 border-t border-slate-200">
-                                            Tổng tiền: <span className="text-indigo-600 text-lg ml-2">{selectedProducts.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toLocaleString()}₫</span>
+                                            Tổng tiền: <span className="text-amber-600 text-lg ml-2">{selectedProducts.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toLocaleString()}₫</span>
                                         </div>
                                     </div>
                                 )}
@@ -469,7 +469,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                             type="submit"
                             form="new-order-form"
                             disabled={selectedProducts.length === 0 || !newCustomerName}
-                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
+                            className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
                         >
                             Tạo Đơn Hàng
                         </button>
@@ -484,8 +484,8 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                         <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                            <PackageOpen size={18} className="text-indigo-600" />
-                            Chi tiết Đơn hàng: <span className="text-indigo-700">{selectedOrder.orderCode}</span>
+                            <PackageOpen size={18} className="text-amber-600" />
+                            Chi tiết Đơn hàng: <span className="text-amber-700">{selectedOrder.orderCode}</span>
                         </h3>
                         <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
                             <X size={20} />
@@ -507,7 +507,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                             </div>
                             <div>
                                 <span className="text-slate-500 block text-xs uppercase mb-1">Tổng tiền</span>
-                                <span className="font-bold text-indigo-600">{isFinancialMasked ? '***' : `${selectedOrder.totalAmount.toLocaleString()}₫`}</span>
+                                <span className="font-bold text-amber-600">{isFinancialMasked ? '***' : `${selectedOrder.totalAmount.toLocaleString()}₫`}</span>
                             </div>
                         </div>
                         
@@ -578,7 +578,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                 <select 
                                     value={newStatus}
                                     onChange={(e) => setNewStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                 >
                                     <option value="Pending">Mới tạo (Pending)</option>
                                     <option value="Confirmed">Đã xác nhận (Confirmed)</option>
@@ -592,7 +592,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                                 <textarea 
                                     value={updateReason}
                                     onChange={(e) => setUpdateReason(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                     rows={2}
                                     placeholder="Nhập lý do thay đổi..."
                                 />
@@ -611,7 +611,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: { onShowN
                         <button 
                             type="submit"
                             form="update-status-form"
-                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
+                            className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-sm"
                         >
                             Lưu thay đổi
                         </button>

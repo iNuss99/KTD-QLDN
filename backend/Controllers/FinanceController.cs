@@ -1,3 +1,4 @@
+using techretail_api.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using techretail_api.Services;
@@ -17,7 +18,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet("growth")]
-        [Authorize(Roles = "Admin,Accountant,Manager")]
+        
         public async Task<ActionResult<IEnumerable<object>>> GetMonthlyGrowth()
         {
             var result = await _financeService.GetMonthlyGrowthAsync();
@@ -36,7 +37,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet("categories")]
-        [Authorize(Roles = "Admin,Accountant")] // Manager cannot see cost breakdown at all
+         // Manager cannot see cost breakdown at all
         public async Task<ActionResult<IEnumerable<object>>> GetExpenseCategories()
         {
             var result = await _financeService.GetExpenseCategoriesAsync();
@@ -44,7 +45,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost("expenses")]
-        [Authorize(Roles = "Admin,Manager")]
+        
         public async Task<IActionResult> AddExpense([FromBody] techretail_api.Models.Expense request)
         {
             try
@@ -59,3 +60,4 @@ namespace techretail_api.Controllers
         }
     }
 }
+

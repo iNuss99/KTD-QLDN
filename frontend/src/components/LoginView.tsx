@@ -57,8 +57,8 @@ export default function LoginView() {
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-50 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <ShoppingBag className="text-white" size={28} />
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -90,7 +90,7 @@ export default function LoginView() {
                   className={`block w-full pl-10 sm:text-sm rounded-md py-2 px-3 border focus:outline-none transition-colors ${
                     errors.email
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
-                      : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
+                      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500 bg-white'
                   }`}
                   placeholder="admin@ktd.local"
                 />
@@ -118,7 +118,7 @@ export default function LoginView() {
                   className={`block w-full pl-10 sm:text-sm rounded-md py-2 px-3 border focus:outline-none transition-colors ${
                     errors.password
                       ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50'
-                      : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white'
+                      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500 bg-white'
                   }`}
                   placeholder="••••••••"
                 />
@@ -134,7 +134,7 @@ export default function LoginView() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer"
+                  className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-slate-300 rounded cursor-pointer"
                 />
                 <label
                   htmlFor="remember-me"
@@ -147,7 +147,7 @@ export default function LoginView() {
               <div className="text-sm">
                 <a
                   href="#"
-                  className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                  className="font-medium text-amber-600 hover:text-amber-500 transition-colors"
                 >
                   Quên mật khẩu?
                 </a>
@@ -158,7 +158,7 @@ export default function LoginView() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

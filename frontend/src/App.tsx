@@ -67,6 +67,7 @@ export default function App() {
   // Core App states
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [permissions, setPermissions] = useState<PermissionRow[]>(INITIAL_PERMISSIONS);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
 
   const token = useAuthStore((state) => state.token);
@@ -138,6 +139,52 @@ export default function App() {
     }
   };
 
+  // Helper: convert flat API records to PermissionRow[] (frontend format)
+  const buildPermissionsFromApi = (records: Array<{ permissionKey: string; roleName: string; isGranted: boolean }>) => {
+    const permMap: Record<string, Partial<PermissionRow>> = {};
+    records.forEach(r => {
+      if (!permMap[r.permissionKey]) {
+        const base = INITIAL_PERMISSIONS.find(p => p.id === r.permissionKey);
+        permMap[r.permissionKey] = base
+          ? { ...base, admin: false, manager: false, accountant: false, salesStaff: false, warehouseStaff: false }
+          : { id: r.permissionKey, action: r.permissionKey, module: 'Finance', admin: false, manager: false, accountant: false, salesStaff: false, warehouseStaff: false };
+      }
+      const roleKey = {
+        'Admin': 'admin', 'Manager': 'manager', 'Accountant': 'accountant',
+        'Sales Staff': 'salesStaff', 'Warehouse Staff': 'warehouseStaff'
+      }[r.roleName];
+      if (roleKey) (permMap[r.permissionKey] as any)[roleKey] = r.isGranted;
+    });
+    return Object.values(permMap) as PermissionRow[];
+  };
+
+  // Helper: convert PermissionRow[] to flat records for API
+  const flattenPermissions = (rows: PermissionRow[]) => {
+    const items: Array<{ permissionKey: string; roleName: string; isGranted: boolean }> = [];
+    const roleMap: Array<[keyof PermissionRow, string]> = [
+      ['admin', 'Admin'], ['manager', 'Manager'], ['accountant', 'Accountant'],
+      ['salesStaff', 'Sales Staff'], ['warehouseStaff', 'Warehouse Staff']
+    ];
+    rows.forEach(row => {
+      roleMap.forEach(([key, roleName]) => {
+        items.push({ permissionKey: row.id, roleName, isGranted: !!row[key] });
+      });
+    });
+    return items;
+  };
+
+  const fetchPermissions = async () => {
+    try {
+      const res = await api.get('/Permissions');
+      const built = buildPermissionsFromApi(res.data);
+      if (built.length > 0) setPermissions(built);
+    } catch (e) {
+      console.warn('[App] Could not load permissions from API, using defaults.');
+    } finally {
+      setPermissionsLoaded(true);
+    }
+  };
+
   // On mount: validate token against backend (catches stale tokens after backend DB reset)
   const logout = useAuthStore((state) => state.logout);
   useEffect(() => {
@@ -145,19 +192,19 @@ export default function App() {
     
     api.get('/Auth/me')
       .then(() => {
-        // Token is valid → fetch users
+        // Token is valid → fetch users AND permissions
         fetchUsers();
+        fetchPermissions();
       })
       .catch((err) => {
         const status = err?.response?.status;
         if (status === 401) {
-          // Stale token or user deleted from DB
           console.warn('[App] Token validation failed (401). Logging out.');
           logout();
           toast('Phiên đăng nhập đã hết hạn hoặc tài khoản thay đổi. Vui lòng đăng nhập lại.', { duration: 5000 });
         } else {
-          // Network error etc - still fetch users optimistically
           fetchUsers();
+          fetchPermissions();
         }
       });
   }, [token]);
@@ -193,7 +240,7 @@ export default function App() {
           <div className="flex flex-col gap-1">
             <span className="font-semibold text-sm">Thêm nhân viên thành công!</span>
             <span className="text-xs">Mật khẩu khởi tạo của <b>{newEmpData.email}</b> là:</span>
-            <span className="font-mono bg-slate-100 px-2 py-1 rounded text-indigo-700 text-center text-lg mt-1 select-all">{generatedPassword}</span>
+            <span className="font-mono bg-slate-100 px-2 py-1 rounded text-amber-700 text-center text-lg mt-1 select-all">{generatedPassword}</span>
             <span className="text-[10px] text-slate-500 mt-1 italic">Mật khẩu này chỉ hiện 1 lần, hãy copy gửi cho nhân viên.</span>
           </div>
         ),
@@ -259,22 +306,47 @@ export default function App() {
     }
   };
 
-  const handleUpdatePermissions = (updatedPerms: PermissionRow[]) => {
+  const canEditPermissions = user?.role === 'Admin' || user?.role === 'Manager';
+
+  const handleUpdatePermissions = async (updatedPerms: PermissionRow[]) => {
+    if (!canEditPermissions) {
+      triggerToast('Bạn không có quyền thay đổi ma trận phân quyền.', 'info');
+      return;
+    }
+    // Optimistic update
     setPermissions(updatedPerms);
-    
-    // Append to activities
-    const newActivity: Activity = {
-      id: `act-${Date.now()}`,
-      type: 'info',
-      title: 'Cập nhật Ma trận Bảo mật',
-      description: 'Quyền hạn vai trò trên toàn hệ thống đã được thay đổi.',
-      time: 'Vừa xong'
-    };
-    setActivities((prev) => [newActivity, ...prev]);
+
+    try {
+      await api.put('/Permissions', flattenPermissions(updatedPerms));
+      // Append to activities
+      const newActivity: Activity = {
+        id: `act-${Date.now()}`,
+        type: 'info',
+        title: 'Cập nhật Ma trận Bảo mật',
+        description: 'Quyền hạn vai trò trên toàn hệ thống đã được lưu vào cơ sở dữ liệu.',
+        time: 'Vừa xong'
+      };
+      setActivities((prev) => [newActivity, ...prev]);
+      triggerToast('Lưu ma trận quyền thành công!');
+    } catch (e) {
+      triggerToast('Lưu ma trận quyền thất bại. Vui lòng thử lại.', 'info');
+      // Rollback
+      await fetchPermissions();
+    }
   };
 
-  const handleResetPermissions = () => {
+  const handleResetPermissions = async () => {
+    if (!canEditPermissions) {
+      triggerToast('Bạn không có quyền đặt lại ma trận phân quyền.', 'info');
+      return;
+    }
     setPermissions(INITIAL_PERMISSIONS);
+    try {
+      await api.put('/Permissions', flattenPermissions(INITIAL_PERMISSIONS));
+      triggerToast('Đã đặt lại ma trận quyền về mặc định!');
+    } catch (e) {
+      triggerToast('Đặt lại ma trận quyền thất bại.', 'info');
+    }
   };
 
   if (!token) {
@@ -300,6 +372,7 @@ export default function App() {
         onOpenNewReport={() => setShowNewReportModal(true)}
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        permissions={permissions}
       />
 
       {/* 2. Main staging container (shifted left to clear fixed sidebar on desktop) */}
@@ -359,6 +432,7 @@ export default function App() {
                 onResetPermissions={handleResetPermissions}
                 onShowNotification={triggerToast}
                 searchTerm={searchTerm}
+                canEdit={canEditPermissions}
               />
             )}
 
@@ -385,7 +459,7 @@ export default function App() {
 
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6 max-w-2xl space-y-6">
                   <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
                       <HelpCircle size={24} />
                     </div>
                     <div>
@@ -396,7 +470,7 @@ export default function App() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-xl">
-                      <Briefcase className="mx-auto text-indigo-600 mb-2" size={20} />
+                      <Briefcase className="mx-auto text-amber-600 mb-2" size={20} />
                       <h4 className="text-xs font-bold text-slate-800">Tài liệu</h4>
                       <p className="text-[10px] text-slate-400 mt-1">Đọc hướng dẫn cài đặt chung và các tham số API.</p>
                     </div>
@@ -406,7 +480,7 @@ export default function App() {
                       <p className="text-[10px] text-slate-400 mt-1">Kiểm tra hiệu suất container, thời gian hoạt động và CSDL.</p>
                     </div>
                     <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-xl">
-                      <ShieldAlert className="mx-auto text-indigo-600 mb-2" size={20} />
+                      <ShieldAlert className="mx-auto text-amber-600 mb-2" size={20} />
                       <h4 className="text-xs font-bold text-slate-800">Mở Vé Hỗ trợ</h4>
                       <p className="text-[10px] text-slate-400 mt-1">Tổng hợp nhật ký khẩn cấp và yêu cầu hỗ trợ kỹ thuật.</p>
                     </div>
@@ -430,7 +504,7 @@ export default function App() {
                           onClick={() => {
                             triggerToast('Vé Hỗ trợ Khẩn cấp đã được gửi và tải lên JIRA.');
                           }}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition-all"
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition-all"
                         >
                           Gửi Vé
                         </button>

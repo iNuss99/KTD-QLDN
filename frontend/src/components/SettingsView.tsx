@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { User, Mail, Shield, Building, Lock, LogOut, Camera } from 'lucide-react';
 import api from '../api';
@@ -26,6 +26,19 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
 
   const handleLogout = () => {
     logout();
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async () => {
@@ -65,12 +78,10 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center gap-6 pb-6 border-b border-slate-200">
+            <input type="file" accept="image/*" ref={fileInputRef} hidden onChange={handleFileChange} />
             <div 
               className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 shrink-0 shadow-sm relative group cursor-pointer"
-              onClick={() => {
-                const url = window.prompt("Nhập đường dẫn URL hình ảnh Avatar mới:", avatarUrl);
-                if (url !== null) setAvatarUrl(url);
-              }}
+              onClick={() => fileInputRef.current?.click()}
               title="Nhấn để đổi ảnh đại diện"
             >
               <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
@@ -82,7 +93,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
               <h3 className="text-xl font-bold text-slate-900">{fullName || 'Người dùng'}</h3>
               <p className="text-sm text-slate-500 mt-1">{user?.email}</p>
               <div className="mt-2 flex gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                   <Shield size={12} />
                   {user?.role}
                 </span>
@@ -115,7 +126,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   readOnly={!isAdmin}
-                  className={`focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm rounded-md py-2 border ${!isAdmin ? 'bg-slate-50 border-slate-300 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`} 
+                  className={`focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 sm:text-sm rounded-md py-2 border ${!isAdmin ? 'bg-slate-50 border-slate-300 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`} 
                 />
               </div>
             </div>
@@ -142,7 +153,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   readOnly={!isAdmin}
-                  className={`focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm rounded-md py-2 border ${!isAdmin ? 'bg-slate-50 border-slate-300 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`} 
+                  className={`focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 sm:text-sm rounded-md py-2 border ${!isAdmin ? 'bg-slate-50 border-slate-300 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`} 
                 />
               </div>
             </div>
@@ -162,7 +173,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
                     placeholder="••••••••" 
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border" 
+                    className="focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border" 
                   />
                 </div>
               </div>
@@ -177,7 +188,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
                     placeholder="Mật khẩu mới" 
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border" 
+                    className="focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border" 
                   />
                 </div>
               </div>
@@ -188,7 +199,7 @@ export default function SettingsView({ onShowNotification }: { onShowNotificatio
             <button 
               onClick={handleSave}
               disabled={loading}
-              className={`border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+              className={`border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 ${loading ? 'bg-amber-400 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700'}`}
             >
               {loading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
             </button>

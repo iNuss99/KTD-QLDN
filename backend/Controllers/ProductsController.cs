@@ -1,3 +1,4 @@
+using techretail_api.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet]
+        [RequiresPermission("perm-7")]
         public async Task<ActionResult<PagedResult<Product>>> GetProducts([FromQuery] string? search, [FromQuery] bool lowStockOnly = false, [FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             if (pageSize > 100) pageSize = 100;
@@ -29,7 +31,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [RequiresPermission("perm-8")]
+        
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
             var createdProduct = await _productsService.CreateProductAsync(product);
@@ -37,7 +40,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpPut("{id}/stock")]
-        [Authorize(Roles = "Admin,Manager,Warehouse Staff,Accountant")]
+        [RequiresPermission("perm-8")]
+        
         public async Task<IActionResult> UpdateStock(Guid id, [FromBody] UpdateStockRequest request)
         {
             try
@@ -58,7 +62,8 @@ namespace techretail_api.Controllers
         }
 
         [HttpGet("{id}/stock-history")]
-        [Authorize(Roles = "Admin,Manager,Warehouse Staff")]
+        [RequiresPermission("perm-7")]
+        
         public async Task<ActionResult<IEnumerable<StockAdjustment>>> GetStockHistory(Guid id)
         {
             var history = await _productsService.GetStockHistoryAsync(id);
@@ -74,3 +79,4 @@ namespace techretail_api.Controllers
         public decimal? NewCostPrice { get; set; }
     }
 }
+

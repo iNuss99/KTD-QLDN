@@ -146,7 +146,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                         <input 
                             type="text" 
                             placeholder="Tìm kiếm theo mã SKU hoặc tên sản phẩm..."
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
                             value={searchTerm}
                             onChange={() => {}}
                         />
@@ -205,7 +205,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                             {canAdjustStock && (
                                                 <button 
                                                     onClick={() => { setSelectedProduct(product); setShowAdjustModal(true); }}
-                                                    className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+                                                    className="text-amber-600 hover:text-amber-800 text-xs font-semibold px-2 py-1 rounded hover:bg-amber-50 transition-colors"
                                                     title="Điều chỉnh tồn kho"
                                                 >
                                                     <Edit3 size={14} />
@@ -233,7 +233,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                             <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                                <Edit3 size={18} className="text-indigo-600" />
+                                <Edit3 size={18} className="text-amber-600" />
                                 Cập nhật Tồn kho
                             </h3>
                             <button onClick={() => setShowAdjustModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -267,7 +267,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                             type="number" 
                                             value={quantityChange}
                                             onChange={(e) => setQuantityChange(parseInt(e.target.value) || 0)}
-                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                             required
                                         />
                                     </div>
@@ -277,7 +277,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                     <select 
                                         value={reason}
                                         onChange={(e) => setReason(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                         required
                                     >
                                         <option value="" disabled>-- Chọn lý do --</option>
@@ -301,7 +301,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                             <button 
                                 type="submit"
                                 form="adjust-stock-form"
-                                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-sm flex items-center gap-2"
                                 disabled={!reason}
                             >
                                 <Save size={16} /> Lưu thay đổi
@@ -351,7 +351,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                             type="number" 
                                             value={receiveQuantity}
                                             onChange={(e) => setReceiveQuantity(parseInt(e.target.value) || 0)}
-                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                             required
                                             min="1"
                                         />
@@ -363,7 +363,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                         type="number" 
                                         value={newCostPrice}
                                         onChange={(e) => setNewCostPrice(parseInt(e.target.value) || 0)}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                         required
                                         min="0"
                                     />
@@ -374,7 +374,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                         type="text" 
                                         value={receiveReason}
                                         onChange={(e) => setReceiveReason(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                                         required
                                     />
                                 </div>
@@ -407,7 +407,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                             <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                                <History size={18} className="text-indigo-600" />
+                                <History size={18} className="text-amber-600" />
                                 Lịch sử Tồn kho
                             </h3>
                             <button onClick={() => setShowHistoryModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">

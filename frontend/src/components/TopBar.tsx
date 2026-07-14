@@ -105,7 +105,7 @@ export default function TopBar({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={getPlaceholderText()}
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs font-normal focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-all text-slate-800 placeholder-slate-400"
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs font-normal focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-slate-50 transition-all text-slate-800 placeholder-slate-400"
           />
           {searchTerm && (
             <button 
@@ -138,12 +138,12 @@ export default function TopBar({
                 <span className="font-semibold text-xs text-slate-700">Thông báo</span>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
-                    <span className="text-[10px] text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">{unreadCount} mới</span>
+                    <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full">{unreadCount} mới</span>
                   )}
                   <button 
                     onClick={markAllAsRead}
                     disabled={unreadCount === 0}
-                    className="text-[10px] text-slate-500 hover:text-indigo-600 transition-colors disabled:opacity-50 disabled:hover:text-slate-500"
+                    className="text-[10px] text-slate-500 hover:text-amber-600 transition-colors disabled:opacity-50 disabled:hover:text-slate-500"
                   >
                     Đánh dấu đã đọc
                   </button>
@@ -155,14 +155,14 @@ export default function TopBar({
                     key={notif.id}
                     onClick={() => markAsRead(notif.id)}
                     className={`px-4 py-3 border-b border-slate-50 last:border-none hover:bg-slate-50 transition-all cursor-pointer flex gap-2.5 ${
-                      notif.unread ? 'bg-indigo-50/20' : ''
+                      notif.unread ? 'bg-amber-50/20' : ''
                     }`}
                   >
                     <div className="mt-0.5">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${notif.unread ? 'bg-indigo-600' : 'bg-transparent'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${notif.unread ? 'bg-amber-600' : 'bg-transparent'}`} />
                     </div>
                     <div>
-                      <h4 className={`font-medium text-xs ${notif.unread ? 'text-indigo-900' : 'text-slate-800'}`}>{notif.title}</h4>
+                      <h4 className={`font-medium text-xs ${notif.unread ? 'text-amber-900' : 'text-slate-800'}`}>{notif.title}</h4>
                       <p className="text-[11px] text-slate-500 mt-0.5">{notif.desc}</p>
                       <span className="text-[10px] text-slate-400 block mt-1">{notif.time}</span>
                     </div>
@@ -198,7 +198,7 @@ export default function TopBar({
               <div className="px-4 py-3">
                 <p className="text-xs font-semibold text-slate-800 leading-tight">{user?.fullName || 'Người dùng'}</p>
                 <p className="text-[11px] text-slate-500 mt-0.5">{user?.email || 'email@example.com'}</p>
-                <p className="text-[10px] bg-indigo-50 text-indigo-700 font-medium px-1.5 py-0.5 rounded mt-1.5 inline-block">
+                <p className="text-[10px] bg-amber-50 text-amber-700 font-medium px-1.5 py-0.5 rounded mt-1.5 inline-block">
                   {user?.role || 'Nhân viên'}
                 </p>
               </div>
