@@ -416,6 +416,7 @@ export default function App() {
             {currentTab === 'employees' && (
               <EmployeesView
                 employees={employees}
+                permissions={permissions}
                 onAddEmployee={handleAddEmployee}
                 onDeactivateEmployee={handleDeactivateEmployee}
                 onDeleteEmployee={handleHardDeleteEmployee}

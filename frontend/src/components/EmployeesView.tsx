@@ -19,11 +19,12 @@ import {
   Layers,
   Check
 } from 'lucide-react';
-import { Employee, EmployeeStatus } from '../types';
+import { Employee, EmployeeStatus, PermissionRow } from '../types';
 import api from '../api';
 
 interface EmployeesViewProps {
   employees: Employee[];
+  permissions?: PermissionRow[];
   onAddEmployee: (employee: Omit<Employee, 'id' | 'avatarInitials'> & { password?: string }) => void;
   onDeactivateEmployee: (id: string) => void;
   onDeleteEmployee: (id: string) => void;
@@ -34,6 +35,7 @@ interface EmployeesViewProps {
 
 export default function EmployeesView({
   employees,
+  permissions = [],
   onAddEmployee,
   onDeactivateEmployee,
   onDeleteEmployee,
@@ -57,6 +59,19 @@ export default function EmployeesView({
 
   const isManagerOrAdmin = currentUserRole === 'Admin' || currentUserRole === 'Manager';
   const isManager = currentUserRole === 'Manager';
+
+  // Map role to key to check permissions
+  const getRoleKey = (roleName?: string): keyof PermissionRow | null => {
+    if (!roleName) return null;
+    if (roleName === 'Admin' || roleName.includes('Quản trị')) return 'admin';
+    if (roleName === 'Manager' || roleName.includes('Quản lý') || roleName.includes('Giám đốc')) return 'manager';
+    if (roleName === 'Accountant' || roleName.includes('Kế toán') || roleName.includes('Kiểm toán')) return 'accountant';
+    if (roleName === 'Sales Staff' || roleName.includes('Bán hàng')) return 'salesStaff';
+    if (roleName === 'Warehouse Staff' || roleName.includes('Kho')) return 'warehouseStaff';
+    return null;
+  };
+  const roleKey = getRoleKey(currentUserRole);
+  const canEditSchedule = roleKey ? permissions.some(p => p.id === 'perm-4' && p[roleKey] === true) : false;
 
   const mapRoleToRoleId = (roleName: string) => {
     switch (roleName) {
@@ -350,6 +365,18 @@ export default function EmployeesView({
                       {activeActionsId === emp.id && (
                         <div className="absolute right-6 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-30 divide-y divide-slate-100 text-left">
                           <div className="py-0.5">
+                            {canEditSchedule && (
+                              <button
+                                onClick={() => {
+                                  onShowNotification(`Đang mở giao diện Chỉnh sửa Lịch làm việc cho ${emp.firstName} ${emp.lastName}`);
+                                  setActiveActionsId(null);
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-1.5 font-medium"
+                              >
+                                <Briefcase size={13} />
+                                Chỉnh sửa Lịch làm việc
+                              </button>
+                            )}
                             <button
                               onClick={() => handleResetPassword(emp.id, `${emp.firstName} ${emp.lastName}`)}
                               className="w-full text-left px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-1.5"
