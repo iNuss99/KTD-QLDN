@@ -8,6 +8,8 @@ using techretail_api.Core.Interceptors;
 using techretail_api.Repositories;
 using techretail_api.Services;
 using techretail_api.Hubs;
+// Disable file watching for appsettings.json to prevent inotify limit exhaustion on Render/Docker
+Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
 
 var builder = WebApplication.CreateBuilder(args);
 
