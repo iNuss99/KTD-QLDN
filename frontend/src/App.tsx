@@ -23,6 +23,8 @@ import TopBar from './layouts/TopBar';
 import ForceChangePasswordView from './pages/auth/ForceChangePasswordView';
 import DashboardView from './pages/dashboard/DashboardView';
 import EmployeesView from './pages/employees/EmployeesView';
+import AttendanceView from './pages/employees/AttendanceView';
+import PayrollView from './pages/employees/PayrollView';
 import PermissionsView from './pages/employees/PermissionsView';
 import FinanceView from './pages/finance/FinanceView';
 import OrdersView from './pages/orders/OrdersView';
@@ -46,7 +48,7 @@ import api from './api';
 export default function App() {
   // Tab Navigation State
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
-  
+
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
@@ -59,10 +61,10 @@ export default function App() {
     }
   }, [user?.role]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
-  
+
   // Modal toggler
   const [showNewReportModal, setShowNewReportModal] = useState<boolean>(false);
-  
+
   // Search state
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -191,7 +193,7 @@ export default function App() {
   const logout = useAuthStore((state) => state.logout);
   useEffect(() => {
     if (!token) return;
-    
+
     api.get('/Auth/me')
       .then(() => {
         // Token is valid → fetch users AND permissions
@@ -248,7 +250,7 @@ export default function App() {
         ),
         { duration: 15000 }
       );
-      
+
       fetchUsers();
     } catch (error: any) {
       console.error('Error adding employee:', error);
@@ -262,7 +264,7 @@ export default function App() {
 
     try {
       await api.patch(`/Users/${id}/deactivate`);
-      
+
       // Append to activities
       const newActivity: Activity = {
         id: `act-${Date.now()}`,
@@ -273,7 +275,7 @@ export default function App() {
         badgeText: 'Cảnh báo'
       };
       setActivities((prev) => [newActivity, ...prev]);
-      
+
       triggerToast(`Đã chuyển nhân viên sang trạng thái nghỉ việc!`);
       fetchUsers();
     } catch (error) {
@@ -288,7 +290,7 @@ export default function App() {
 
     try {
       await api.delete(`/Users/${id}`);
-      
+
       // Append to activities
       const newActivity: Activity = {
         id: `act-${Date.now()}`,
@@ -299,7 +301,7 @@ export default function App() {
         badgeText: 'Cảnh báo'
       };
       setActivities((prev) => [newActivity, ...prev]);
-      
+
       triggerToast(`Xóa nhân viên thành công!`);
       fetchUsers();
     } catch (error) {
@@ -366,7 +368,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-800 antialiased select-none">
-      
+
       {/* 1. Sidebar Panel (Handles responsiveness itself) */}
       <Sidebar
         currentTab={currentTab}
@@ -379,7 +381,7 @@ export default function App() {
 
       {/* 2. Main staging container (shifted left to clear fixed sidebar on desktop) */}
       <div className="flex-1 flex flex-col md:pl-64 h-full overflow-hidden transition-all duration-300">
-        
+
         {/* Top Header Actions block */}
         <TopBar
           onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
@@ -426,6 +428,14 @@ export default function App() {
                 searchTerm={searchTerm}
                 currentUserRole={user?.role}
               />
+            )}
+
+            {currentTab === 'attendance' && (
+              <AttendanceView onShowNotification={triggerToast} />
+            )}
+
+            {currentTab === 'payroll' && (
+              <PayrollView onShowNotification={triggerToast} />
             )}
 
             {currentTab === 'permissions' && (

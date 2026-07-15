@@ -44,5 +44,10 @@ namespace techretail_api.Core.Models
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Salary { get; set; } = 0;
+
+        // HR Fields
+        public DateTime? JoinDate { get; set; }
+        public int LeaveDaysTotal { get; set; } = 12; // Default 12 days per year
+        public int LeaveDaysUsed { get; set; } = 0;
     }
 }

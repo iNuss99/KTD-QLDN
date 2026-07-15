@@ -19,6 +19,7 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add HttpContextAccessor for getting Claims in Interceptor
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<AuditInterceptor>();
 
 // Add DbContext
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IProductsService, ProductsService>();
+builder.Services.AddScoped<IHrService, HrService>();
 
 builder.Services.AddCors(options =>
 {

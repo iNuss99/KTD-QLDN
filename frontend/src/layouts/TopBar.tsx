@@ -9,7 +9,9 @@ import {
   Settings as SettingsIcon,
   Check,
   ShoppingCart,
-  AlertCircle
+  AlertCircle,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useSignalR } from '../hooks/useSignalR';
@@ -34,6 +36,20 @@ export default function TopBar({
   
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
+
+  const toggleDarkMode = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove('dark');
+      setIsDarkMode(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      setIsDarkMode(true);
+    }
+  };
   
   const profileRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
@@ -155,6 +171,16 @@ export default function TopBar({
 
       {/* Right side: Action icons & Profile */}
       <div className="flex items-center gap-1 sm:gap-3 ml-4 shrink-0">
+        <div>
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all rounded-full cursor-pointer active:scale-95"
+            title="Đổi giao diện"
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
+
         {/* Notifications Button & Dropdown */}
         <div className="relative" ref={notifyRef}>
           <button

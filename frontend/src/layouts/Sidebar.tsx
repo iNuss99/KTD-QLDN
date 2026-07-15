@@ -94,7 +94,7 @@ export default function Sidebar({
             <p className="text-[11px] text-amber-400 mt-1 whitespace-nowrap">KTD Enterprise</p>
           </div>
         </div>
-        
+
         {/* Mobile close button */}
         {onCloseMobile && (
           <button
@@ -131,11 +131,10 @@ export default function Sidebar({
                     setCurrentTab(item.id);
                     if (onCloseMobile) onCloseMobile();
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer active:scale-[0.98] ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer active:scale-[0.98] ${isActive
                       ? 'text-white bg-amber-600 font-semibold shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
+                    }`}
                 >
                   <Icon size={16} />
                   <span>{item.label}</span>
@@ -155,11 +154,10 @@ export default function Sidebar({
                 setCurrentTab('settings');
                 if (onCloseMobile) onCloseMobile();
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                currentTab === 'settings'
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentTab === 'settings'
                   ? 'text-white bg-slate-800 font-semibold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
+                }`}
             >
               <Settings size={16} />
               <span>Cài đặt</span>
@@ -171,11 +169,10 @@ export default function Sidebar({
                 setCurrentTab('support');
                 if (onCloseMobile) onCloseMobile();
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                currentTab === 'support'
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentTab === 'support'
                   ? 'text-white bg-slate-800 font-semibold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
+                }`}
             >
               <HelpCircle size={16} />
               <span>Hỗ trợ</span>

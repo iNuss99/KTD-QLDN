@@ -17,6 +17,8 @@ namespace techretail_api.Infrastructure.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
+        public DbSet<PayrollRecord> PayrollRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
