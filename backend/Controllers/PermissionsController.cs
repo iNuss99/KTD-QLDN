@@ -22,14 +22,9 @@ namespace techretail_api.Controllers
             _roleRepository = roleRepository;
         }
 
-        private async Task<bool> IsAdminOrManager()
+        private bool IsAdminOrManager()
         {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdStr, out var userId)) return false;
-            var user = await _db.Users.FindAsync(userId);
-            if (user == null) return false;
-            var role = await _roleRepository.GetByIdAsync(user.RoleId);
-            return role?.RoleName == "Admin" || role?.RoleName == "Manager";
+            return User.IsInRole("Admin") || User.IsInRole("Manager");
         }
 
         /// <summary>
@@ -67,7 +62,7 @@ namespace techretail_api.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdatePermissions([FromBody] List<PermissionUpdateItem> items)
         {
-            if (!await IsAdminOrManager())
+            if (!IsAdminOrManager())
                 return StatusCode(403, new { message = "Chỉ Admin hoặc Manager mới có quyền thay đổi ma trận phân quyền." });
 
             if (items == null || !items.Any())
