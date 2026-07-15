@@ -37,6 +37,29 @@ namespace techretail_api.Controllers
             return Ok(result);
         }
 
+        [HttpGet("top-products")]
+        public async Task<ActionResult<IEnumerable<object>>> GetTopProducts([FromQuery] int limit = 5)
+        {
+            var result = await _dashboardService.GetTopProductsAsync(limit);
+            return Ok(result);
+        }
+
+        [HttpGet("order-status-distribution")]
+        public async Task<ActionResult<object>> GetOrderStatusDistribution()
+        {
+            var result = await _dashboardService.GetOrderStatusDistributionAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("sales-trend")]
+        public async Task<ActionResult<IEnumerable<object>>> GetSalesTrend([FromQuery] int days = 30)
+        {
+            if (days < 7) days = 7;
+            if (days > 90) days = 90;
+            var result = await _dashboardService.GetSalesTrendAsync(days);
+            return Ok(result);
+        }
+
         [HttpPost("seed")]
         [AllowAnonymous]
         public async Task<IActionResult> Seed()

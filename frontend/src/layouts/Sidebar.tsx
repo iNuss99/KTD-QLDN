@@ -14,7 +14,9 @@ import {
   X,
   ShoppingCart,
   Boxes,
-  BarChart3
+  BarChart3,
+  ScrollText,
+  ClipboardList
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -71,7 +73,8 @@ export default function Sidebar({
     ...(isHRVisible ? [{ id: 'employees', label: 'Nhân sự', icon: Users }] : []),
     ...(isAdminOrManager ? [{ id: 'permissions', label: 'Phân quyền', icon: ShieldCheck }] : []),
     ...(isFinanceVisible ? [{ id: 'finance', label: 'Tài chính', icon: CreditCard }] : []),
-    ...(roleKey === 'salesStaff' ? [{ id: 'staff-report', label: 'Báo cáo cá nhân', icon: BarChart3 }] : []),
+    ...(roleKey === 'salesStaff' || roleKey === 'warehouseStaff' ? [{ id: 'staff-report', label: 'Báo cáo cá nhân', icon: BarChart3 }] : []),
+    ...(roleKey === 'admin' ? [{ id: 'audit-log', label: 'Nhật ký kiểm toán', icon: ScrollText }] : []),
   ];
 
   const sidebarContent = (

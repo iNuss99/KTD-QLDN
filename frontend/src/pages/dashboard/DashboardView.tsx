@@ -25,7 +25,7 @@ import {
   ChevronRight,
   PieChart
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Activity } from '../../types';
 
 interface DashboardViewProps {
@@ -63,6 +63,12 @@ export default function DashboardView({
   const [marginTotalPages, setMarginTotalPages] = useState(1);
   const marginPageSize = 5;
 
+  // New chart states
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [orderDistribution, setOrderDistribution] = useState<any>(null);
+  const [salesTrend, setSalesTrend] = useState<any[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+
   const fetchData = useCallback(async () => {
     try {
       const kpiRes = await api.get('/Dashboard/kpis');
@@ -77,6 +83,24 @@ export default function DashboardView({
       setRevenueData(revArray);
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
+    }
+  }, []);
+
+  const fetchCharts = useCallback(async () => {
+    setChartsLoading(true);
+    try {
+      const [topRes, distRes, trendRes] = await Promise.all([
+        api.get('/Dashboard/top-products?limit=5'),
+        api.get('/Dashboard/order-status-distribution'),
+        api.get('/Dashboard/sales-trend?days=30'),
+      ]);
+      setTopProducts(topRes.data);
+      setOrderDistribution(distRes.data);
+      setSalesTrend(trendRes.data);
+    } catch (error) {
+      console.error('Failed to fetch chart data', error);
+    } finally {
+      setChartsLoading(false);
     }
   }, []);
 
@@ -101,16 +125,18 @@ export default function DashboardView({
 
   useEffect(() => {
     fetchData();
+    fetchCharts();
     fetchMarginData();
 
     if (token) {
         const intervalId = setInterval(() => {
             fetchData();
+            fetchCharts();
         }, 30000);
 
         return () => clearInterval(intervalId);
     }
-  }, [token, fetchData, fetchMarginData]);
+  }, [token, fetchData, fetchMarginData, fetchCharts]);
 
   const filteredActivities = activities.filter(act => 
     act.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -440,6 +466,161 @@ export default function DashboardView({
           )}
         </div>
       )}
+
+      {/* ═══ NEW: Sales Trend + Order Distribution ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-2">
+
+        {/* Sales Trend — 30 ngày */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-sm text-slate-800">Xu hướng doanh số 30 ngày</h3>
+              <p className="text-[10px] text-slate-500 mt-0.5">Đơn hàng xác nhận + đang giao + hoàn thành</p>
+            </div>
+            {chartsLoading && <span className="text-[10px] text-slate-400 animate-pulse">Đang tải...</span>}
+          </div>
+          <div className="p-4">
+            {salesTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={salesTrend} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    interval={4}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => v === 0 ? '0' : `${(v / 1_000_000).toFixed(0)}M`}
+                  />
+                  <Tooltip
+                    formatter={(v: any) => [`${Number(v).toLocaleString('vi-VN')} ₫`, 'Doanh thu']}
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#d97706"
+                    strokeWidth={2}
+                    fill="url(#trendGrad)"
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#d97706' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-xs text-slate-400">
+                {chartsLoading ? 'Đang tải dữ liệu...' : 'Chưa có dữ liệu xu hướng'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Order Status Distribution — Donut */}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-sm text-slate-800">Phân bổ đơn hàng</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5">Theo trạng thái hiện tại</p>
+          </div>
+          <div className="p-4">
+            {orderDistribution ? (() => {
+              const PIE_COLORS = ['#94a3b8', '#d97706', '#3b82f6', '#10b981', '#ef4444'];
+              const pieData = [
+                { name: 'Mới tạo', value: orderDistribution.pending },
+                { name: 'Xác nhận', value: orderDistribution.confirmed },
+                { name: 'Đang giao', value: orderDistribution.shipped },
+                { name: 'Hoàn thành', value: orderDistribution.delivered },
+                { name: 'Đã hủy', value: orderDistribution.cancelled },
+              ].filter(d => d.value > 0);
+              const total = pieData.reduce((s, d) => s + d.value, 0);
+              return (
+                <div className="flex flex-col items-center">
+                  <ResponsiveContainer width="100%" height={150}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={65}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {pieData.map((_, i) => (
+                          <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: any) => [`${v} đơn`, '']} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                  <div className="w-full space-y-1.5 mt-2">
+                    {pieData.map((d, i) => (
+                      <div key={i} className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: PIE_COLORS[i] }} />
+                          <span className="text-slate-600">{d.name}</span>
+                        </div>
+                        <span className="font-semibold text-slate-800">{d.value} <span className="font-normal text-slate-400">({total ? Math.round(d.value / total * 100) : 0}%)</span></span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="h-[220px] flex items-center justify-center text-xs text-slate-400">
+                {chartsLoading ? 'Đang tải...' : 'Chưa có dữ liệu'}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ NEW: Top Products Bar Chart ═══ */}
+      {topProducts.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mt-2">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-sm text-slate-800">Top 5 sản phẩm bán chạy</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5">Tính theo tổng số lượng đã bán trong tất cả đơn hàng</p>
+          </div>
+          <div className="p-4">
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart
+                data={topProducts}
+                layout="vertical"
+                margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="productName"
+                  width={140}
+                  tick={{ fontSize: 9, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + '…' : v}
+                />
+                <Tooltip
+                  formatter={(v: any, name: string) => [v, name === 'totalQuantity' ? 'Số lượng' : 'Doanh thu']}
+                  contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                />
+                <Bar dataKey="totalQuantity" fill="#d97706" radius={[0, 4, 4, 0]} barSize={18} name="Số lượng" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

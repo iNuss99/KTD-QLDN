@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Edit3, X, History, Save } from 'lucide-react';
+import { Package, Search, Edit3, X, History, Save, AlertTriangle } from 'lucide-react';
 import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
+import { SkeletonTable } from '../../components/common/SkeletonLoader';
 
 interface Product {
     id: string;
@@ -10,6 +11,7 @@ interface Product {
     sellingPrice: number;
     costPrice?: number;
     stockQuantity: number;
+    minStockThreshold: number;
     isDeleted: boolean;
 }
 
@@ -166,9 +168,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-8 text-slate-400">Đang tải sản phẩm...</td>
-                                </tr>
+                                <SkeletonTable rows={8} cols={5} />
                             ) : filteredProducts.length > 0 ? (
                                 filteredProducts.map((product) => (
                                     <tr key={product.id} className="hover:bg-slate-50 transition-colors">
@@ -181,9 +181,32 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                         </td>
                                         <td className="px-4 py-3 text-right font-medium">{isFinancialMasked ? '***' : `${product.sellingPrice.toLocaleString()}₫`}</td>
                                         <td className="px-4 py-3 text-center">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${product.stockQuantity > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'} border`}>
-                                                {product.stockQuantity}
-                                            </span>
+                                            {(() => {
+                                              const threshold = product.minStockThreshold ?? 10;
+                                              const isLow = product.stockQuantity <= threshold;
+                                              const isCritical = product.stockQuantity === 0;
+                                              return (
+                                                <div className="flex items-center justify-center gap-1.5">
+                                                  <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                                                    isCritical ? 'bg-red-100 text-red-700 border-red-200' :
+                                                    isLow ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                    'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                  }`}>
+                                                    {product.stockQuantity}
+                                                  </span>
+                                                  {isCritical && (
+                                                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                                                      <AlertTriangle size={10} /> Hết hàng
+                                                    </span>
+                                                  )}
+                                                  {!isCritical && isLow && (
+                                                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                                      <AlertTriangle size={10} /> Thấp
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              );
+                                            })()}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button 

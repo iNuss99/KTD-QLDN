@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Search,
   Bell,
@@ -12,9 +7,12 @@ import {
   LogOut,
   ChevronDown,
   Settings as SettingsIcon,
-  Check
+  Check,
+  ShoppingCart,
+  AlertCircle
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useSignalR } from '../hooks/useSignalR';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -69,11 +67,48 @@ export default function TopBar({
     }
   };
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Báo cáo Quý 3 đã duyệt', desc: 'Phòng Tài chính đã ký duyệt.', time: '10 phút trước', unread: true },
-    { id: 2, title: 'Tải máy chủ cao', desc: 'Node cơ sở dữ liệu 3 gần đầy.', time: '45 phút trước', unread: true },
-    { id: 3, title: 'Nhân viên mới gia nhập', desc: 'Sarah Jenkins gia nhập Bộ phận Bán lẻ.', time: '2 giờ trước', unread: false }
-  ]);
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    title: string;
+    desc: string;
+    time: string;
+    unread: boolean;
+    type?: 'order' | 'system' | 'alert';
+  }>>([]);
+
+  const notifIdRef = useRef(1);
+
+  const addNotification = useCallback((title: string, desc: string, type: 'order' | 'system' | 'alert' = 'system') => {
+    setNotifications((prev) => [
+      { id: notifIdRef.current++, title, desc, time: 'Vừa xong', unread: true, type },
+      ...prev.slice(0, 19), // max 20 items
+    ]);
+  }, []);
+
+  // Wire up SignalR real-time events
+  useSignalR({
+    onNewOrderCreated: (data) => {
+      addNotification(
+        `Đơn hàng mới: ${data.orderCode}`,
+        `KH: ${data.customerName} — Trạng thái: ${data.status}`,
+        'order'
+      );
+    },
+    onOrderStatusChanged: (data) => {
+      addNotification(
+        `Đơn ${data.orderCode} cập nhật`,
+        `${data.oldStatus} → ${data.newStatus}`,
+        'order'
+      );
+    },
+    onLowStockAlert: (data) => {
+      addNotification(
+        `⚠️ Cảnh báo tồn kho thấp`,
+        `${data.productName}: chỉ còn ${data.currentStock} sản phẩm`,
+        'alert'
+      );
+    },
+  });
 
   const unreadCount = notifications.filter(n => n.unread).length;
 

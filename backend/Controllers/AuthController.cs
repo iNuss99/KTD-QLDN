@@ -25,9 +25,12 @@ namespace techretail_api.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             string? token;
+            string? refreshToken;
             try
             {
-                token = await _authService.LoginAsync(request.Email, request.Password);
+                var result = await _authService.LoginAsync(request.Email, request.Password);
+                token = result.AccessToken;
+                refreshToken = result.RefreshToken;
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -47,6 +50,7 @@ namespace techretail_api.Controllers
 
             return Ok(new { 
                 token, 
+                refreshToken,
                 user = new { 
                     id = user.Id, 
                     email = user.Email, 
@@ -55,6 +59,21 @@ namespace techretail_api.Controllers
                     avatarUrl = user.AvatarUrl,
                     isFirstLogin = user.IsFirstLogin 
                 } 
+            });
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            var (newAccessToken, newRefreshToken) = await _authService.RefreshTokenAsync(request.RefreshToken);
+            if (newAccessToken == null || newRefreshToken == null)
+            {
+                return Unauthorized(new { message = "Invalid or expired refresh token" });
+            }
+
+            return Ok(new {
+                token = newAccessToken,
+                refreshToken = newRefreshToken
             });
         }
 
@@ -158,5 +177,10 @@ namespace techretail_api.Controllers
         public string? FullName { get; set; }
         public string? Department { get; set; }
         public string? AvatarUrl { get; set; }
+    }
+
+    public class RefreshTokenRequest
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

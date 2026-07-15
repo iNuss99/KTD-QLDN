@@ -9,6 +9,9 @@ namespace techretail_api.Services
         Task<object> GetKPIsAsync();
         Task<IEnumerable<object>> GetRevenueChartAsync();
         Task<object> GetMarginDetailsAsync(int page, int pageSize);
+        Task<IEnumerable<object>> GetTopProductsAsync(int limit = 5);
+        Task<object> GetOrderStatusDistributionAsync();
+        Task<IEnumerable<object>> GetSalesTrendAsync(int days = 30);
         Task SeedDataAsync();
     }
 
@@ -187,6 +190,69 @@ namespace techretail_api.Services
             }
 
             await _context.SaveChangesAsync();
+        }
+        public async Task<IEnumerable<object>> GetTopProductsAsync(int limit = 5)
+        {
+            var result = await _context.OrderDetails
+                .Include(od => od.Product)
+                .Where(od => od.Product != null && !od.Product.IsDeleted)
+                .GroupBy(od => new { od.ProductId, od.Product!.ProductName, od.Product.SKU })
+                .Select(g => new
+                {
+                    ProductId = g.Key.ProductId,
+                    ProductName = g.Key.ProductName,
+                    SKU = g.Key.SKU,
+                    TotalQuantity = g.Sum(x => x.Quantity),
+                    TotalRevenue = g.Sum(x => x.Quantity * x.UnitPrice)
+                })
+                .OrderByDescending(x => x.TotalQuantity)
+                .Take(limit)
+                .ToListAsync();
+
+            return result.Cast<object>();
+        }
+
+        public async Task<object> GetOrderStatusDistributionAsync()
+        {
+            var distribution = await _context.Orders
+                .GroupBy(o => o.OrderStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return new
+            {
+                Pending = distribution.FirstOrDefault(d => d.Status == "Pending")?.Count ?? 0,
+                Confirmed = distribution.FirstOrDefault(d => d.Status == "Confirmed")?.Count ?? 0,
+                Shipped = distribution.FirstOrDefault(d => d.Status == "Shipped")?.Count ?? 0,
+                Delivered = distribution.FirstOrDefault(d => d.Status == "Delivered")?.Count ?? 0,
+                Cancelled = distribution.FirstOrDefault(d => d.Status == "Cancelled")?.Count ?? 0,
+            };
+        }
+
+        public async Task<IEnumerable<object>> GetSalesTrendAsync(int days = 30)
+        {
+            var startDate = DateTime.UtcNow.Date.AddDays(-days + 1);
+            var orders = await _context.Orders
+                .Where(o => o.CreatedAt >= startDate && (o.OrderStatus == "Confirmed" || o.OrderStatus == "Shipped" || o.OrderStatus == "Delivered"))
+                .GroupBy(o => o.CreatedAt.Date)
+                .Select(g => new { Date = g.Key, Revenue = g.Sum(x => x.TotalAmount), Count = g.Count() })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+
+            // Fill missing days with 0
+            var result = new List<object>();
+            for (int i = 0; i < days; i++)
+            {
+                var date = startDate.AddDays(i);
+                var entry = orders.FirstOrDefault(o => o.Date == date);
+                result.Add(new
+                {
+                    date = date.ToString("dd/MM"),
+                    revenue = entry?.Revenue ?? 0m,
+                    count = entry?.Count ?? 0
+                });
+            }
+            return result;
         }
     }
 }

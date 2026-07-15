@@ -11,5 +11,8 @@ namespace techretail_api.Core.Models
         public Guid? CorrelationId { get; set; }
         public string SeverityLevel { get; set; } = "Normal";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation property
+        public User? User { get; set; }
     }
 }

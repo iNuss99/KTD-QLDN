@@ -7,6 +7,7 @@ using techretail_api.Infrastructure.Database.Seeders;
 using techretail_api.Core.Interceptors;
 using techretail_api.Repositories;
 using techretail_api.Services;
+using techretail_api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 
 // Register Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -92,6 +94,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// SignalR Hub
+app.MapHub<OperationsHub>("/hubs/operations");
 
 // Health check endpoint for UptimeRobot
 app.MapGet("/", () => "Kingdom Trust Division API is running!");

@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using techretail_api.Infrastructure.Data;
 using techretail_api.Core.Models;
+using Microsoft.AspNetCore.SignalR;
+using techretail_api.Hubs;
 
 namespace techretail_api.Services
 {
     public interface IOrdersService
     {
-        Task<PagedResult<Order>> GetOrdersAsync(int page = 1, int pageSize = 50, string? status = null, string? search = null, bool maskFinancialData = false, bool isSalesStaff = false);
+        Task<PagedResult<Order>> GetOrdersAsync(int page = 1, int pageSize = 50, string? status = null, string? search = null, bool maskFinancialData = false, bool isSalesStaff = false, DateTime? fromDate = null, DateTime? toDate = null, string? createdBy = null);
         Task<Order> CreateOrderAsync(Order order);
         Task UpdateOrderStatusAsync(Guid orderId, string newStatus, string? reason, bool isAdmin, Guid currentUserId = default);
         Task DeleteOrderAsync(Guid orderId);
@@ -15,13 +17,15 @@ namespace techretail_api.Services
     public class OrdersService : IOrdersService
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<OperationsHub> _hub;
 
-        public OrdersService(AppDbContext context)
+        public OrdersService(AppDbContext context, IHubContext<OperationsHub> hub)
         {
             _context = context;
+            _hub = hub;
         }
 
-        public async Task<PagedResult<Order>> GetOrdersAsync(int page = 1, int pageSize = 50, string? status = null, string? search = null, bool maskFinancialData = false, bool isSalesStaff = false)
+        public async Task<PagedResult<Order>> GetOrdersAsync(int page = 1, int pageSize = 50, string? status = null, string? search = null, bool maskFinancialData = false, bool isSalesStaff = false, DateTime? fromDate = null, DateTime? toDate = null, string? createdBy = null)
         {
             var query = _context.Orders
                 .Include(o => o.OrderDetails)
@@ -46,6 +50,28 @@ namespace techretail_api.Services
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(o => o.OrderCode.Contains(search) || o.CustomerName.Contains(search));
+            }
+
+            // Date range filters
+            if (fromDate.HasValue)
+            {
+                var from = DateTime.SpecifyKind(fromDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(o => o.CreatedAt >= from);
+            }
+            if (toDate.HasValue)
+            {
+                var to = DateTime.SpecifyKind(toDate.Value.Date.AddDays(1), DateTimeKind.Utc);
+                query = query.Where(o => o.CreatedAt < to);
+            }
+
+            // Filter by creator name (join with users)
+            if (!string.IsNullOrEmpty(createdBy))
+            {
+                var matchingUserIds = await _context.Users
+                    .Where(u => u.FullName.Contains(createdBy))
+                    .Select(u => u.Id)
+                    .ToListAsync();
+                query = query.Where(o => matchingUserIds.Contains(o.CreatedBy));
             }
 
             int totalCount = await query.CountAsync();
@@ -123,6 +149,17 @@ namespace techretail_api.Services
                 throw;
             }
 
+            // Push real-time event after successful commit
+            await _hub.Clients.Groups("Admin", "Manager", "Sales", "Warehouse")
+                .SendAsync("NewOrderCreated", new
+                {
+                    orderCode = order.OrderCode,
+                    customerName = order.CustomerName,
+                    status = order.OrderStatus,
+                    totalAmount = order.TotalAmount,
+                    createdAt = order.CreatedAt
+                });
+
             return order;
         }
 
@@ -187,6 +224,17 @@ namespace techretail_api.Services
 
                 order.OrderStatus = newStatus;
                 await _context.SaveChangesAsync();
+
+                // Push real-time event
+                await _hub.Clients.Groups("Admin", "Manager", "Sales", "Warehouse")
+                    .SendAsync("OrderStatusChanged", new
+                    {
+                        orderId,
+                        orderCode = order.OrderCode,
+                        oldStatus,
+                        newStatus,
+                        updatedAt = DateTime.UtcNow
+                    });
 
                 // Generate SystemLog if needed
                 if (!isValidForward && isAdmin)

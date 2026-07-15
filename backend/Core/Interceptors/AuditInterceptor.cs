@@ -32,6 +32,9 @@ namespace techretail_api.Core.Interceptors
             var context = eventData.Context;
             if (context == null) return base.SavingChanges(eventData, result);
 
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return base.SavingChanges(eventData, result);
+
             var entries = context.ChangeTracker.Entries()
                 .Where(e => e.Entity is not SystemLog && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
                 .ToList();
@@ -41,7 +44,7 @@ namespace techretail_api.Core.Interceptors
                 var auditEntry = new SystemLog
                 {
                     Id = Guid.NewGuid(),
-                    UserId = GetCurrentUserId(), 
+                    UserId = userId, 
                     TableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -76,6 +79,9 @@ namespace techretail_api.Core.Interceptors
             var context = eventData.Context;
             if (context == null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return base.SavingChangesAsync(eventData, result, cancellationToken);
+
             var entries = context.ChangeTracker.Entries()
                 .Where(e => e.Entity is not SystemLog && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
                 .ToList();
@@ -85,7 +91,7 @@ namespace techretail_api.Core.Interceptors
                 var auditEntry = new SystemLog
                 {
                     Id = Guid.NewGuid(),
-                    UserId = GetCurrentUserId(),
+                    UserId = userId,
                     TableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
                     CreatedAt = DateTime.UtcNow
                 };

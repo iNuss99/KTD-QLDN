@@ -31,6 +31,8 @@ import NewReportModal from './components/common/NewReportModal';
 import LoginView from './pages/auth/LoginView';
 import SettingsView from './pages/settings/SettingsView';
 import StaffSalesReportView from './pages/settings/StaffSalesReportView';
+import AuditLogView from './pages/admin/AuditLogView';
+import SessionTimeoutModal from './components/common/SessionTimeoutModal';
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 
@@ -445,6 +447,11 @@ export default function App() {
               <StaffSalesReportView onShowNotification={triggerToast} />
             )}
 
+            {/* Audit Log — Admin Only */}
+            {currentTab === 'audit-log' && user?.role === 'Admin' && (
+              <AuditLogView onShowNotification={triggerToast} />
+            )}
+
             {/* Custom Settings Page */}
             {currentTab === 'settings' && (
               <SettingsView onShowNotification={triggerToast} />
@@ -526,6 +533,9 @@ export default function App() {
           onShowNotification={triggerToast}
         />
       )}
+
+      {/* Session Timeout Modal */}
+      <SessionTimeoutModal />
 
       {/* 4. Global Toast Notifications banner */}
       <Toaster position="bottom-right" />

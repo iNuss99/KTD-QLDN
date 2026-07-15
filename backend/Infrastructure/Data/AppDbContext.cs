@@ -16,6 +16,7 @@ namespace techretail_api.Infrastructure.Data
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

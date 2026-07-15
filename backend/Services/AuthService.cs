@@ -9,7 +9,9 @@ namespace techretail_api.Services
 {
     public interface IAuthService
     {
-        Task<string?> LoginAsync(string email, string password);
+        Task<(string? AccessToken, string? RefreshToken)> LoginAsync(string email, string password);
+        Task<(string? AccessToken, string? RefreshToken)> RefreshTokenAsync(string token);
+        Task<bool> RevokeTokenAsync(string token);
     }
 
     public class AuthService : IAuthService
@@ -17,19 +19,21 @@ namespace techretail_api.Services
         private readonly IUserService _userService;
         private readonly IRepository<Role> _roleRepository;
         private readonly IConfiguration _configuration;
+        private readonly IRepository<RefreshToken> _refreshTokenRepository;
 
-        public AuthService(IUserService userService, IRepository<Role> roleRepository, IConfiguration configuration)
+        public AuthService(IUserService userService, IRepository<Role> roleRepository, IConfiguration configuration, IRepository<RefreshToken> refreshTokenRepository)
         {
             _userService = userService;
             _roleRepository = roleRepository;
             _configuration = configuration;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
-        public async Task<string?> LoginAsync(string email, string password)
+        public async Task<(string? AccessToken, string? RefreshToken)> LoginAsync(string email, string password)
         {
             var user = await _userService.GetUserByEmailAsync(email);
             if (user == null || !user.IsActive)
-                return null;
+                return (null, null);
 
             if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
                 throw new UnauthorizedAccessException($"Account locked until {user.LockedUntil.Value.ToLocalTime()}. Please try again later.");
@@ -44,7 +48,7 @@ namespace techretail_api.Services
                     user.FailedLoginAttempts = 0; // Reset after locking
                 }
                 await _userService.UpdateUserAsync(user);
-                return null;
+                return (null, null);
             }
 
             if (user.IsFirstLogin && user.TempPasswordExpiresAt.HasValue && user.TempPasswordExpiresAt.Value < DateTime.UtcNow)
@@ -64,7 +68,67 @@ namespace techretail_api.Services
             var role = await _roleRepository.GetByIdAsync(user.RoleId);
             var roleName = role?.RoleName ?? "Sales Staff";
 
-            return GenerateJwtToken(user, roleName);
+            var accessToken = GenerateJwtToken(user, roleName);
+            var refreshToken = await GenerateRefreshTokenAsync(user.Id);
+
+            return (accessToken, refreshToken);
+        }
+
+        public async Task<(string? AccessToken, string? RefreshToken)> RefreshTokenAsync(string token)
+        {
+            var refreshTokens = await _refreshTokenRepository.GetAllAsync();
+            var existingToken = refreshTokens.FirstOrDefault(t => t.Token == token);
+            
+            if (existingToken == null || !existingToken.IsActive)
+                return (null, null);
+
+            // Revoke the old token
+            existingToken.IsRevoked = true;
+            _refreshTokenRepository.Update(existingToken);
+            await _refreshTokenRepository.SaveChangesAsync();
+
+            var user = await _userService.GetUserByIdAsync(existingToken.UserId);
+            if (user == null || !user.IsActive)
+                return (null, null);
+
+            var role = await _roleRepository.GetByIdAsync(user.RoleId);
+            var roleName = role?.RoleName ?? "Sales Staff";
+
+            var newAccessToken = GenerateJwtToken(user, roleName);
+            var newRefreshToken = await GenerateRefreshTokenAsync(user.Id);
+
+            return (newAccessToken, newRefreshToken);
+        }
+
+        public async Task<bool> RevokeTokenAsync(string token)
+        {
+            var refreshTokens = await _refreshTokenRepository.GetAllAsync();
+            var existingToken = refreshTokens.FirstOrDefault(t => t.Token == token);
+
+            if (existingToken == null || !existingToken.IsActive)
+                return false;
+
+            existingToken.IsRevoked = true;
+            _refreshTokenRepository.Update(existingToken);
+            await _refreshTokenRepository.SaveChangesAsync();
+            return true;
+        }
+
+        private async Task<string> GenerateRefreshTokenAsync(Guid userId)
+        {
+            var token = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+            var refreshToken = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Token = token,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _refreshTokenRepository.AddAsync(refreshToken);
+            await _refreshTokenRepository.SaveChangesAsync();
+            return token;
         }
 
         private string GenerateJwtToken(User user, string roleName)
