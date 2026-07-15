@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -49,6 +49,9 @@ namespace techretail_api.Infrastructure.Data.Migrations
                 name: "IX_RefreshTokens_UserId",
                 table: "RefreshTokens",
                 column: "UserId");
+
+            // Clean up invalid SystemLogs where UserId doesn't exist in Users table
+            migrationBuilder.Sql("DELETE FROM \"SystemLogs\" WHERE \"UserId\" NOT IN (SELECT \"Id\" FROM \"Users\");");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_SystemLogs_Users_UserId",
