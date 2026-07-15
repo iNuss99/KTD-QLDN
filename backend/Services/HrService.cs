@@ -48,8 +48,7 @@ namespace techretail_api.Services
         public async Task<AttendanceRecord> CheckInAsync(Guid userId, string? notes = null)
         {
             var today = DateTime.UtcNow.Date;
-            var records = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date == today);
-            var record = records.FirstOrDefault();
+            var record = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date == today);
 
             if (record == null)
             {
@@ -70,8 +69,7 @@ namespace techretail_api.Services
         public async Task<AttendanceRecord> CheckOutAsync(Guid userId, string? notes = null)
         {
             var today = DateTime.UtcNow.Date;
-            var records = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date == today);
-            var record = records.FirstOrDefault();
+            var record = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date == today);
 
             if (record != null)
             {
@@ -89,13 +87,13 @@ namespace techretail_api.Services
 
         public async Task<IEnumerable<AttendanceRecord>> GetAttendanceByEmployeeAsync(Guid userId, int month, int year)
         {
-            var records = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date.Month == month && a.Date.Year == year);
+            var records = await _attendanceRepository.FindAllAsync(a => a.UserId == userId && a.Date.Month == month && a.Date.Year == year);
             return records.OrderBy(a => a.Date);
         }
 
         public async Task<IEnumerable<AttendanceRecord>> GetAllAttendanceAsync(DateTime date)
         {
-            var records = await _attendanceRepository.FindAsync(a => a.Date.Date == date.Date);
+            var records = await _attendanceRepository.FindAllAsync(a => a.Date.Date == date.Date);
             return records;
         }
 
@@ -106,7 +104,7 @@ namespace techretail_api.Services
 
             // Basic calculation:
             // Assuming 22 working days. Find how many days present.
-            var attendance = await _attendanceRepository.FindAsync(a => a.UserId == userId && a.Date.Month == month && a.Date.Year == year && a.CheckInTime != null);
+            var attendance = await _attendanceRepository.FindAllAsync(a => a.UserId == userId && a.Date.Month == month && a.Date.Year == year && a.CheckInTime != null);
             int daysPresent = attendance.Count();
             
             // Simple formula: Salary / 22 * daysPresent
@@ -121,8 +119,7 @@ namespace techretail_api.Services
             decimal deductions = 0;
             decimal netPay = user.Salary + bonus - deductions;
 
-            var existingRecords = await _payrollRepository.FindAsync(p => p.UserId == userId && p.Month == month && p.Year == year);
-            var payroll = existingRecords.FirstOrDefault();
+            var payroll = await _payrollRepository.FindAsync(p => p.UserId == userId && p.Month == month && p.Year == year);
 
             if (payroll == null)
             {
@@ -152,7 +149,7 @@ namespace techretail_api.Services
 
         public async Task<IEnumerable<PayrollRecord>> GetPayrollByMonthAsync(int month, int year)
         {
-            return await _payrollRepository.FindAsync(p => p.Month == month && p.Year == year);
+            return await _payrollRepository.FindAllAsync(p => p.Month == month && p.Year == year);
         }
 
         public async Task<PayrollRecord> MarkPayrollAsPaidAsync(Guid payrollId)
