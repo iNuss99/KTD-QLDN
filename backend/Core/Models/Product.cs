@@ -10,6 +10,7 @@ namespace techretail_api.Core.Models
         public int StockQuantity { get; set; } = 0;
         public int MinStockThreshold { get; set; } = 10;
         public bool IsDeleted { get; set; } = false;
+        public string? ImageUrl { get; set; }
         public byte[]? RowVersion { get; set; }
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }

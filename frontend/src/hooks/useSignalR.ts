@@ -12,6 +12,7 @@ interface UseSignalROptions {
   onOrderStatusChanged?: SignalREventHandler;
   onLowStockAlert?: SignalREventHandler;
   onNotification?: SignalREventHandler;
+  onSystemActivity?: SignalREventHandler;
 }
 
 /**
@@ -42,6 +43,7 @@ export function useSignalR(options: UseSignalROptions = {}) {
     connection.on('OrderStatusChanged', (data) => optionsRef.current.onOrderStatusChanged?.(data));
     connection.on('LowStockAlert', (data) => optionsRef.current.onLowStockAlert?.(data));
     connection.on('Notification', (data) => optionsRef.current.onNotification?.(data));
+    connection.on('onSystemActivity', (data) => optionsRef.current.onSystemActivity?.(data));
 
     connection.onreconnecting(() => console.info('[SignalR] Reconnecting...'));
     connection.onreconnected(() => console.info('[SignalR] Reconnected!'));

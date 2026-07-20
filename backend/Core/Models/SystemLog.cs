@@ -6,6 +6,8 @@ namespace techretail_api.Core.Models
         public Guid UserId { get; set; }
         public string ActionType { get; set; } = string.Empty;
         public string TableName { get; set; } = string.Empty;
+        public string? EntityId { get; set; }
+        public string? IpAddress { get; set; }
         public string? OldValues { get; set; }
         public string? NewValues { get; set; }
         public Guid? CorrelationId { get; set; }

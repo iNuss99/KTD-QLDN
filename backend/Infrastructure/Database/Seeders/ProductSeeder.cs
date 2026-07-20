@@ -25,10 +25,6 @@ namespace techretail_api.Infrastructure.Database.Seeders
                 dbContext.SaveChanges();
             }
 
-            // Auto-update existing low prices for VND scale
-            dbContext.Database.ExecuteSqlRaw("UPDATE \"Products\" SET \"CostPrice\" = \"CostPrice\" * 20000, \"SellingPrice\" = \"SellingPrice\" * 20000 WHERE \"CostPrice\" < 10000;");
-            dbContext.Database.ExecuteSqlRaw("UPDATE \"Orders\" SET \"TotalAmount\" = \"TotalAmount\" * 20000 WHERE \"TotalAmount\" < 100000;");
-            dbContext.Database.ExecuteSqlRaw("UPDATE \"OrderDetails\" SET \"UnitPrice\" = \"UnitPrice\" * 20000, \"UnitCost\" = \"UnitCost\" * 20000 WHERE \"UnitPrice\" < 10000;");
         }
     }
 }

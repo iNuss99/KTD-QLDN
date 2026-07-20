@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useSignalR } from '../hooks/useSignalR';
+import api from '../api';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -40,7 +41,19 @@ export default function TopBar({
   const profileRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
 
-  // Close menus when clicking outside
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    title: string;
+    desc: string;
+    time: string;
+    unread: boolean;
+    type?: 'order' | 'system' | 'alert';
+  }>>([]);
+
+  const [searchResults, setSearchResults] = useState<any>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -48,6 +61,9 @@ export default function TopBar({
       }
       if (notifyRef.current && !notifyRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchResults(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -69,14 +85,25 @@ export default function TopBar({
     }
   };
 
-  const [notifications, setNotifications] = useState<Array<{
-    id: number;
-    title: string;
-    desc: string;
-    time: string;
-    unread: boolean;
-    type?: 'order' | 'system' | 'alert';
-  }>>([]);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchTerm.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await api.get(`/Search?q=${encodeURIComponent(searchTerm)}`);
+          setSearchResults(res.data);
+        } catch (error) {
+          console.error("Lỗi khi tìm kiếm:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults(null);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
   const notifIdRef = useRef(1);
 
@@ -110,6 +137,16 @@ export default function TopBar({
         'alert'
       );
     },
+    onSystemActivity: (activities: any[]) => {
+      if (!activities || !activities.length) return;
+      activities.forEach(act => {
+        addNotification(
+          `Hoạt động hệ thống: ${act.actionLabel}`,
+          `Bảng ${act.tableName} đã có thay đổi (ID: ${act.entityId?.substring(0,8)}...)`,
+          'system'
+        );
+      });
+    }
   });
 
   const unreadCount = notifications.filter(n => n.unread).length;
@@ -133,7 +170,7 @@ export default function TopBar({
           <Menu size={20} />
         </button>
 
-        <div className="relative w-full">
+        <div className="relative w-full" ref={searchRef}>
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
             <Search size={16} />
           </span>
@@ -151,6 +188,64 @@ export default function TopBar({
             >
               Xóa
             </button>
+          )}
+
+          {/* Search Results Dropdown */}
+          {searchTerm.trim().length >= 2 && (
+            <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-2 max-h-[400px] overflow-y-auto">
+              {isSearching ? (
+                <div className="p-4 text-center text-xs text-slate-500">Đang tìm kiếm...</div>
+              ) : searchResults ? (
+                <>
+                  {(!searchResults.users?.length && !searchResults.products?.length && !searchResults.orders?.length) ? (
+                    <div className="p-4 text-center text-xs text-slate-500">Không tìm thấy kết quả</div>
+                  ) : (
+                    <div className="flex flex-col">
+                      {searchResults.users?.length > 0 && (
+                        <div className="px-3 py-2">
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Người dùng</div>
+                          {searchResults.users.map((u: any) => (
+                            <div key={u.id} className="p-2 hover:bg-slate-50 rounded-lg cursor-pointer">
+                              <div className="text-xs font-medium text-slate-800">{u.fullName}</div>
+                              <div className="text-[10px] text-slate-500">{u.email} - {u.role}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {searchResults.products?.length > 0 && (
+                        <div className="px-3 py-2 border-t border-slate-100">
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sản phẩm</div>
+                          {searchResults.products.map((p: any) => (
+                            <div key={p.id} className="p-2 hover:bg-slate-50 rounded-lg cursor-pointer flex justify-between items-center">
+                              <div>
+                                <div className="text-xs font-medium text-slate-800">{p.name}</div>
+                                <div className="text-[10px] text-slate-500">SKU: {p.sku}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {searchResults.orders?.length > 0 && (
+                        <div className="px-3 py-2 border-t border-slate-100">
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Đơn hàng</div>
+                          {searchResults.orders.map((o: any) => (
+                            <div key={o.id} className="p-2 hover:bg-slate-50 rounded-lg cursor-pointer flex justify-between items-center">
+                              <div>
+                                <div className="text-xs font-medium text-slate-800">{o.orderCode}</div>
+                                <div className="text-[10px] text-slate-500">{o.customerName}</div>
+                              </div>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{o.status}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

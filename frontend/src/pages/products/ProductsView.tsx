@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Edit3, X, History, Save, AlertTriangle } from 'lucide-react';
+import { Package, Search, Edit3, X, History, Save, AlertTriangle, Plus, Image as ImageIcon } from 'lucide-react';
 import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
@@ -13,6 +13,7 @@ interface Product {
     stockQuantity: number;
     minStockThreshold: number;
     isDeleted: boolean;
+    imageUrl?: string;
 }
 
 interface StockHistory {
@@ -33,6 +34,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
     const user = useAuthStore((state) => state.user);
     const canAdjustStock = user?.role === 'Warehouse Staff' || user?.role === 'Admin';
     const canReceiveStock = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Accountant';
+    const canCreateProduct = user?.role === 'Admin' || user?.role === 'Manager';
     const isFinancialMasked = user && ['Sales Staff', 'Warehouse Staff'].includes(user.role);
     
     // Stock adjustment modal state
@@ -51,6 +53,18 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [stockHistory, setStockHistory] = useState<StockHistory[]>([]);
 
+    // Add Product modal state
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newProduct, setNewProduct] = useState({
+        sku: '',
+        productName: '',
+        costPrice: 0,
+        sellingPrice: 0,
+        stockQuantity: 0,
+        minStockThreshold: 10,
+        imageUrl: ''
+    });
+
     useEffect(() => {
         fetchProducts();
     }, []);
@@ -64,6 +78,26 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
             onShowNotification('Lỗi khi tải danh sách sản phẩm', 'info');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddProduct = async (e: React.FormEvent) => {
+        e.preventDefault();
+        let finalSku = newProduct.sku.trim();
+        if (!finalSku.toUpperCase().startsWith('KTD-')) {
+            finalSku = 'KTD-' + finalSku.replace(/^KTD-/i, '');
+        } else {
+            finalSku = finalSku.toUpperCase();
+        }
+        
+        try {
+            await api.post('/Products', { ...newProduct, sku: finalSku });
+            onShowNotification('Thêm sản phẩm thành công!', 'success');
+            setShowAddModal(false);
+            fetchProducts();
+        } catch (error) {
+            console.error(error);
+            onShowNotification('Lỗi khi thêm sản phẩm. Có thể mã SKU đã tồn tại.', 'info');
         }
     };
 
@@ -139,6 +173,17 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900">Sản phẩm &amp; Tồn kho</h2>
                     <p className="text-xs text-slate-500 mt-1">Quản lý danh sách sản phẩm và kiểm soát tồn kho.</p>
                 </div>
+                {canCreateProduct && (
+                    <button 
+                        onClick={() => {
+                            setNewProduct({ sku: 'KTD-' + Math.floor(10000 + Math.random() * 90000), productName: '', costPrice: 0, sellingPrice: 0, stockQuantity: 0, minStockThreshold: 10, imageUrl: '' });
+                            setShowAddModal(true);
+                        }}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium flex items-center gap-2 shadow-sm transition-colors"
+                    >
+                        <Plus size={16} /> Thêm Sản Phẩm
+                    </button>
+                )}
             </div>
 
             <div className="bg-white border border-slate-200 shadow-sm rounded-md overflow-hidden">
@@ -155,23 +200,34 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                     </div>
                 </div>
                 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600">
-                        <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
-                            <tr>
-                                <th className="px-4 py-3">Mã SKU</th>
-                                <th className="px-4 py-3">Tên sản phẩm</th>
-                                <th className="px-4 py-3 text-right">Giá bán</th>
-                                <th className="px-4 py-3 text-center">Tồn kho</th>
-                                <th className="px-4 py-3 text-right">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {loading ? (
-                                <SkeletonTable rows={8} cols={5} />
-                            ) : filteredProducts.length > 0 ? (
+                {loading ? (
+                    <SkeletonTable rows={8} cols={6} />
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-slate-600">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th className="px-4 py-3 w-16">Ảnh</th>
+                                    <th className="px-4 py-3">Mã SKU</th>
+                                    <th className="px-4 py-3">Tên sản phẩm</th>
+                                    <th className="px-4 py-3 text-right">Giá bán</th>
+                                    <th className="px-4 py-3 text-center">Tồn kho</th>
+                                    <th className="px-4 py-3 text-right">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filteredProducts.length > 0 ? (
                                 filteredProducts.map((product) => (
-                                    <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-4 py-3">
+                                            {product.imageUrl ? (
+                                                <img src={product.imageUrl} alt={product.productName} className="w-10 h-10 object-cover rounded-md border border-slate-200" />
+                                            ) : (
+                                                <div className="w-10 h-10 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center text-slate-400">
+                                                    <ImageIcon size={16} />
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3 font-medium text-slate-900">{product.sku}</td>
                                         <td className="px-4 py-3">
                                             {product.productName}
@@ -248,7 +304,137 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                         </tbody>
                     </table>
                 </div>
+                )}
             </div>
+
+            {/* Add Product Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+                            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                                <Plus size={18} className="text-amber-600" />
+                                Thêm Sản Phẩm Mới
+                            </h3>
+                            <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto p-4 flex-1">
+                            <form id="add-product-form" onSubmit={handleAddProduct} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Mã SKU (Bắt đầu bằng KTD-)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProduct.sku}
+                                            onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Tên Sản Phẩm</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProduct.productName}
+                                            onChange={(e) => setNewProduct({...newProduct, productName: e.target.value})}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">URL Hình Ảnh</label>
+                                    <input 
+                                        type="url" 
+                                        value={newProduct.imageUrl}
+                                        onChange={(e) => setNewProduct({...newProduct, imageUrl: e.target.value})}
+                                        placeholder="https://example.com/image.jpg"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                    />
+                                    {newProduct.imageUrl && (
+                                        <div className="mt-2">
+                                            <p className="text-xs text-slate-500 mb-1">Preview:</p>
+                                            <img src={newProduct.imageUrl} alt="Preview" className="h-20 w-20 object-cover rounded border border-slate-200" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {!isFinancialMasked && (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Giá Nhập (₫)</label>
+                                            <input 
+                                                type="text" 
+                                                value={newProduct.costPrice ? newProduct.costPrice.toLocaleString() : ''}
+                                                placeholder="0"
+                                                onChange={(e) => {
+                                                    const rawValue = e.target.value.replace(/\D/g, '');
+                                                    setNewProduct({...newProduct, costPrice: parseInt(rawValue) || 0});
+                                                }}
+                                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                            />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Giá Bán (₫)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProduct.sellingPrice ? newProduct.sellingPrice.toLocaleString() : ''}
+                                            placeholder="0"
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/\D/g, '');
+                                                setNewProduct({...newProduct, sellingPrice: parseInt(rawValue) || 0});
+                                            }}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Tồn kho ban đầu</label>
+                                        <input 
+                                            type="number" 
+                                            value={newProduct.stockQuantity}
+                                            onChange={(e) => setNewProduct({...newProduct, stockQuantity: parseInt(e.target.value) || 0})}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                            min="0"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Mức tồn tối thiểu</label>
+                                        <input 
+                                            type="number" 
+                                            value={newProduct.minStockThreshold}
+                                            onChange={(e) => setNewProduct({...newProduct, minStockThreshold: parseInt(e.target.value) || 0})}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                                            min="0"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div className="flex justify-end gap-3 p-4 border-t border-slate-100 bg-white">
+                            <button 
+                                type="button"
+                                onClick={() => setShowAddModal(false)}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button 
+                                type="submit"
+                                form="add-product-form"
+                                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                            >
+                                <Save size={16} /> Lưu Sản Phẩm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Adjust Stock Modal */}
             {showAdjustModal && selectedProduct && (
@@ -383,12 +569,11 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Giá nhập lô này (₫)</label>
                                     <input 
-                                        type="number" 
-                                        value={newCostPrice}
-                                        onChange={(e) => setNewCostPrice(parseInt(e.target.value) || 0)}
+                                        type="text" 
+                                        value={newCostPrice ? newCostPrice.toLocaleString() : ''}
+                                        placeholder="0"
+                                        onChange={(e) => setNewCostPrice(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
                                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"
-                                        required
-                                        min="0"
                                     />
                                 </div>
                                 <div>
