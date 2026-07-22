@@ -86,15 +86,18 @@ namespace techretail_api.Services
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
 
-            // Send welcome email
-            try
+            // Send welcome email in background to prevent blocking API if SMTP times out
+            _ = Task.Run(async () =>
             {
-                await _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, generatedPassword);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send welcome email to {Email}", user.Email);
-            }
+                try
+                {
+                    await _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, generatedPassword);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send welcome email to {Email}", user.Email);
+                }
+            });
 
             return (user, generatedPassword);
         }
@@ -155,15 +158,18 @@ namespace techretail_api.Services
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            // Notify user of password reset via email
-            try
+            // Notify user of password reset via email in background
+            _ = Task.Run(async () =>
             {
-                await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, generatedPassword);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
-            }
+                try
+                {
+                    await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, generatedPassword);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
+                }
+            });
 
             return generatedPassword;
         }
