@@ -51,6 +51,7 @@ builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IProductsService, ProductsService>();
 builder.Services.AddScoped<IHrService, HrService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddCors(options =>
 {

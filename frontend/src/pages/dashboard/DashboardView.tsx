@@ -3,9 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import api from '../../api';
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import {
+  useDashboardKpis, useRevenueChart, useTopProducts,
+  useOrderDistribution, useSalesTrend, useMarginDetails
+} from '../../hooks/useDashboard';
 import {
   DollarSign,
   TrendingUp,
@@ -49,71 +52,24 @@ export default function DashboardView({
 
   const canViewFinancials = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Accountant';
 
-  const [kpis, setKpis] = useState<any>({
-    totalRevenue: 0,
-    totalCogs: 0,
-    grossProfit: 0,
-    margin: 0,
-    revenueChange: 0
-  });
-
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  const [marginData, setMarginData] = useState<any[]>([]);
   const [marginPage, setMarginPage] = useState(1);
-  const [marginTotalPages, setMarginTotalPages] = useState(1);
   const marginPageSize = 5;
 
-  // New chart states
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [orderDistribution, setOrderDistribution] = useState<any>(null);
-  const [salesTrend, setSalesTrend] = useState<any[]>([]);
-  const [chartsLoading, setChartsLoading] = useState(true);
+  const { data: kpis = { totalRevenue: 0, totalCogs: 0, grossProfit: 0, margin: 0, revenueChange: 0 } } = useDashboardKpis();
+  const { data: revenueDataRaw = [] } = useRevenueChart();
+  const { data: topProducts = [] } = useTopProducts();
+  const { data: orderDistribution = null } = useOrderDistribution();
+  const { data: salesTrend = [] } = useSalesTrend();
+  const { data: marginRaw, isLoading: chartsLoading } = useMarginDetails(marginPage, marginPageSize, canViewFinancials);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const kpiRes = await api.get('/Dashboard/kpis');
-      setKpis(kpiRes.data);
+  const revenueData = revenueDataRaw as any[];
+  const marginData: any[] = (marginRaw as any)?.items ?? [];
+  const marginTotalPages = Math.ceil(((marginRaw as any)?.totalCount ?? 0) / marginPageSize) || 1;
 
-      const revRes = await api.get('/Dashboard/revenue-chart');
-      const revArray = revRes.data.map((r: any) => ({
-        label: r.label.replace('Jan','T1').replace('Feb','T2').replace('Mar','T3').replace('Apr','T4').replace('May','T5').replace('Jun','T6').replace('Jul','T7').replace('Aug','T8').replace('Sep','T9').replace('Oct','T10').replace('Nov','T11').replace('Dec','T12'),
-        amount: r.amount,
-        cost: r.cost
-      }));
-      setRevenueData(revArray);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data', error);
-    }
-  }, []);
-
-  const fetchCharts = useCallback(async () => {
-    setChartsLoading(true);
-    try {
-      const [topRes, distRes, trendRes] = await Promise.all([
-        api.get('/Dashboard/top-products?limit=5'),
-        api.get('/Dashboard/order-status-distribution'),
-        api.get('/Dashboard/sales-trend?days=30'),
-      ]);
-      setTopProducts(topRes.data);
-      setOrderDistribution(distRes.data);
-      setSalesTrend(trendRes.data);
-    } catch (error) {
-      console.error('Failed to fetch chart data', error);
-    } finally {
-      setChartsLoading(false);
-    }
-  }, []);
-
-  const fetchMarginData = useCallback(async () => {
-    if (!canViewFinancials) return;
-    try {
-      const res = await api.get(`/Dashboard/margin-details?page=${marginPage}&pageSize=${marginPageSize}`);
-      setMarginData(res.data.items);
-      setMarginTotalPages(Math.ceil(res.data.totalCount / marginPageSize));
-    } catch (error) {
-      console.error('Failed to fetch margin details', error);
-    }
-  }, [marginPage, canViewFinancials]);
+  const filteredActivities = activities.filter(act => 
+    act.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    act.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const formatVND = (value: number) => {
     return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
@@ -123,25 +79,6 @@ export default function DashboardView({
     return new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 }).format(value) + ' ₫';
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchCharts();
-    fetchMarginData();
-
-    if (token) {
-        const intervalId = setInterval(() => {
-            fetchData();
-            fetchCharts();
-        }, 30000);
-
-        return () => clearInterval(intervalId);
-    }
-  }, [token, fetchData, fetchMarginData, fetchCharts]);
-
-  const filteredActivities = activities.filter(act => 
-    act.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    act.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const displayRevenueData = revenueData;
 

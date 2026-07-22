@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Download,
   FileText,
@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from 'recharts';
 import api from '../../api';
+import { useFinanceCategories, useFinanceGrowth, useAddExpense } from '../../hooks/useFinance';
+import { useDashboardKpis } from '../../hooks/useDashboard';
 
 const formatVND = (value: number) => {
   return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' ₫';
@@ -40,7 +42,13 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
   
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [expenseForm, setExpenseForm] = useState({ category: 'Payroll', amount: '', description: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: rawCategories = [] } = useFinanceCategories();
+  const { data: monthlyGrowth = [] } = useFinanceGrowth();
+  const { data: metrics } = useDashboardKpis();
+  const addExpenseMutation = useAddExpense();
+
+  const isSubmitting = addExpenseMutation.isPending;
 
   const handleExportCSV = async () => {
     onShowNotification('Đang xuất báo cáo tài chính...');
@@ -72,9 +80,8 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
       return;
     }
     
-    setIsSubmitting(true);
     try {
-      await api.post('/Finance/expenses', {
+      await addExpenseMutation.mutateAsync({
         category: expenseForm.category,
         amount: Number(expenseForm.amount.replace(/,/g, '')),
         description: expenseForm.description,
@@ -83,82 +90,39 @@ export default function FinanceView({ onShowNotification }: FinanceViewProps) {
       onShowNotification('Thêm chi phí thành công');
       setIsAddExpenseModalOpen(false);
       setExpenseForm({ category: 'Payroll', amount: '', description: '' });
-      fetchFinance();
     } catch (error) {
       console.error(error);
       onShowNotification('Lỗi khi thêm chi phí');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const [donutSegments, setDonutSegments] = useState<any[]>([]);
-  const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
-  const [monthlyGrowth, setMonthlyGrowth] = useState<any[]>([]);
-  const [totalExpenses, setTotalExpenses] = useState<number>(0);
-  const [metrics, setMetrics] = useState<any>(null);
+  const { donutSegments, expenseCategories, totalExpenses } = useMemo(() => {
+    let cumulativeOffset = 0;
+    const totalValue = rawCategories.reduce((sum: number, c: any) => sum + c.value, 0);
 
-  const fetchFinance = async () => {
-    // Fetch expense categories
-    try {
-      const catRes = await api.get('/Finance/categories');
-      const categories = catRes.data;
-
-      let cumulativeOffset = 0;
-      const totalValue = categories.reduce((sum: number, c: any) => sum + c.value, 0);
-      setTotalExpenses(totalValue);
-
-      const segments = categories.map((c: any) => {
-        const strokeArray = `${(c.percentage / 100) * 502} 502`;
-        const strokeOffset = `-${cumulativeOffset}`;
-        cumulativeOffset += (c.percentage / 100) * 502;
-        return {
-          name: c.name,
-          percentage: c.percentage,
-          strokeDasharray: strokeArray,
-          strokeDashoffset: strokeOffset,
-          color: c.color
-        };
-      });
-      setDonutSegments(segments);
-
-      const mappedCategories = categories.map((c: any, index: number) => ({
+    const segments = rawCategories.map((c: any) => {
+      const strokeArray = `${(c.percentage / 100) * 502} 502`;
+      const strokeOffset = `-${cumulativeOffset}`;
+      cumulativeOffset += (c.percentage / 100) * 502;
+      return {
         name: c.name,
         percentage: c.percentage,
-        valueFormatted: formatVND(c.value),
-        rawValue: c.value,
-        bgClass: index === 0 ? 'bg-amber-600' : index === 1 ? 'bg-[#c3c0ff]' : index === 2 ? 'bg-[#dae2fd]' : index === 3 ? 'bg-[#cbdbf5]' : 'bg-slate-400'
-      }));
-      setExpenseCategories(mappedCategories);
-    } catch (error: any) {
-      if (error.response?.status === 403) {
-        console.log('User does not have permission to view expense categories');
-      } else {
-        console.error('Failed to fetch finance categories data', error);
-      }
-    }
+        strokeDasharray: strokeArray,
+        strokeDashoffset: strokeOffset,
+        color: c.color
+      };
+    });
 
-    // Fetch monthly growth
-    try {
-      const growthRes = await api.get('/Finance/growth');
-      const growthData = growthRes.data;
-      setMonthlyGrowth(growthData);
-    } catch (error: any) {
-      console.error('Failed to fetch finance growth data', error);
-    }
+    const mappedCategories = rawCategories.map((c: any, index: number) => ({
+      name: c.name,
+      percentage: c.percentage,
+      valueFormatted: formatVND(c.value),
+      rawValue: c.value,
+      bgClass: index === 0 ? 'bg-amber-600' : index === 1 ? 'bg-[#c3c0ff]' : index === 2 ? 'bg-[#dae2fd]' : index === 3 ? 'bg-[#cbdbf5]' : 'bg-slate-400'
+    }));
 
-    // Fetch real KPIs
-    try {
-      const kpiRes = await api.get('/Dashboard/kpis');
-      setMetrics(kpiRes.data);
-    } catch (error: any) {
-      console.error('Failed to fetch KPI metrics', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchFinance();
-  }, []);
+    return { donutSegments: segments, expenseCategories: mappedCategories, totalExpenses: totalValue };
+  }, [rawCategories]);
 
   return (
     <div className="space-y-6">

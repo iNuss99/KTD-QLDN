@@ -21,24 +21,16 @@ import {
 } from 'lucide-react';
 import { Employee, EmployeeStatus, PermissionRow } from '../../types';
 import api from '../../api';
+import { useUsers, useCreateUser, useDeactivateUser, useDeleteUser } from '../../hooks/useUsers';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface EmployeesViewProps {
-  employees: Employee[];
-  permissions?: PermissionRow[];
-  onAddEmployee: (employee: Omit<Employee, 'id' | 'avatarInitials'> & { password?: string }) => void;
-  onDeactivateEmployee: (id: string) => void;
-  onDeleteEmployee: (id: string) => void;
   onShowNotification: (message: string) => void;
   searchTerm: string;
   currentUserRole?: string;
 }
 
 export default function EmployeesView({
-  employees,
-  permissions = [],
-  onAddEmployee,
-  onDeactivateEmployee,
-  onDeleteEmployee,
   onShowNotification,
   searchTerm,
   currentUserRole
@@ -48,6 +40,14 @@ export default function EmployeesView({
   const [currentPage, setCurrentPage] = useState(1);
   const [activeActionsId, setActiveActionsId] = useState<string | null>(null);
   const [departmentFilter, setDepartmentFilter] = useState('Tất cả');
+
+  // TanStack Query Hooks
+  const { data: employees = [], isLoading } = useUsers();
+  const { data: permissions = [] } = usePermissions();
+  const createUser = useCreateUser();
+  const deactivateUser = useDeactivateUser();
+  const deleteUser = useDeleteUser();
+
 
   // Form Fields State
   const [firstName, setFirstName] = useState('');
@@ -149,7 +149,7 @@ export default function EmployeesView({
     setSalary(formattedValue);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
@@ -157,26 +157,38 @@ export default function EmployeesView({
       return;
     }
 
-    onAddEmployee({
-      firstName,
-      lastName,
-      email,
-      department,
-      role,
-      status: 'Đang hoạt động' as any,
-      salary: parseFloat(salary.replace(/,/g, '')) || 0
-    });
-
-    handleCloseModal();
+    try {
+      const res = await createUser.mutateAsync({
+        fullName: `${firstName} ${lastName}`,
+        email,
+        department,
+        roleId: mapRoleToRoleId(role),
+        salary: parseFloat(salary.replace(/,/g, '')) || 0
+      });
+      onShowNotification(`Thêm nhân viên thành công! Mật khẩu khởi tạo: ${res.generatedPassword}`);
+      handleCloseModal();
+    } catch (err: any) {
+      onShowNotification(err.response?.data?.message || 'Thêm nhân viên thất bại');
+    }
   };
 
-  const handleDeleteClick = (id: string, name: string) => {
-    onDeleteEmployee(id);
+  const handleDeleteClick = async (id: string, name: string) => {
+    try {
+      await deleteUser.mutateAsync(id);
+      onShowNotification(`Đã xóa hoàn toàn nhân viên ${name}.`);
+    } catch (err: any) {
+      onShowNotification('Thao tác thất bại');
+    }
     setActiveActionsId(null);
   };
 
-  const handleDeactivateClick = (id: string, name: string) => {
-    onDeactivateEmployee(id);
+  const handleDeactivateClick = async (id: string, name: string) => {
+    try {
+      await deactivateUser.mutateAsync(id);
+      onShowNotification(`Đã chuyển ${name} sang trạng thái nghỉ việc!`);
+    } catch (err: any) {
+      onShowNotification('Thao tác thất bại');
+    }
     setActiveActionsId(null);
   };
 

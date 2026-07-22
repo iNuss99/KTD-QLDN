@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, ComponentType } from 'react';
+import { useState, ComponentType } from 'react';
 import {
   ScrollText,
   Filter,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../../api';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
+import { useAuditLogs } from '../../hooks/useHr';
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; icon: ComponentType<{ size?: number; className?: string }> }> = {
   High: { label: 'Cao', color: 'text-red-600 bg-red-50 border-red-200', icon: AlertTriangle },
@@ -64,10 +65,7 @@ interface AuditLogViewProps {
 }
 
 export default function AuditLogView({ onShowNotification }: AuditLogViewProps) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const pageSize = 20;
@@ -80,32 +78,19 @@ export default function AuditLogView({ onShowNotification }: AuditLogViewProps) 
     search: '',
   });
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      params.set('pageSize', String(pageSize));
-      if (filters.actionType) params.set('action', filters.actionType);
-      if (filters.severity) params.set('severity', filters.severity);
-      if (filters.fromDate) params.set('from', filters.fromDate);
-      if (filters.toDate) params.set('to', filters.toDate);
-      if (filters.search) params.set('search', filters.search);
+  const auditParams = {
+    page,
+    pageSize,
+    actionType: filters.actionType,
+    severity: filters.severity,
+    fromDate: filters.fromDate,
+    toDate: filters.toDate,
+    search: filters.search
+  };
 
-      const res = await api.get(`/AuditLog?${params.toString()}`);
-      setLogs(res.data.items || res.data);
-      setTotalCount(res.data.totalCount || (res.data.items || res.data).length);
-    } catch (err) {
-      console.error('Failed to fetch audit logs:', err);
-      onShowNotification('Tải nhật ký thất bại');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, filters, onShowNotification]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+  const { data: auditData, isLoading: loading, refetch } = useAuditLogs(auditParams);
+  const logs = auditData?.items as LogEntry[] ?? [];
+  const totalCount = auditData?.totalCount ?? 0;
 
   const handleExportCSV = async () => {
     try {
@@ -149,7 +134,7 @@ export default function AuditLogView({ onShowNotification }: AuditLogViewProps) 
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchLogs}
+            onClick={() => refetch()}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
             <RefreshCw size={13} />

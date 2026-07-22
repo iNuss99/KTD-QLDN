@@ -7,19 +7,16 @@ import { useState, useEffect } from 'react';
 import { Shield, Filter, Search, RotateCcw, Save, Check } from 'lucide-react';
 import { PermissionRow } from '../../types';
 
+import { usePermissions, useSavePermissions } from '../../hooks/usePermissions';
+import { INITIAL_PERMISSIONS } from '../../utils/data';
+
 interface PermissionsViewProps {
-  permissions: PermissionRow[];
-  onUpdatePermissions: (updated: PermissionRow[]) => void;
-  onResetPermissions: () => void;
   onShowNotification: (message: string) => void;
   searchTerm: string;
   canEdit?: boolean;
 }
 
 export default function PermissionsView({
-  permissions,
-  onUpdatePermissions,
-  onResetPermissions,
   onShowNotification,
   searchTerm,
   canEdit = false
@@ -28,12 +25,16 @@ export default function PermissionsView({
   const [activeModuleFilter, setActiveModuleFilter] = useState<'All' | 'Orders' | 'Finance' | 'HR' | 'Inventory'>('All');
   
   // Working draft of permissions
+  const { data: permissions = [] } = usePermissions();
+  const savePermissions = useSavePermissions();
   const [draftPermissions, setDraftPermissions] = useState<PermissionRow[]>(permissions);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
 
   // Sync draft whenever parent permissions update (e.g. after API load)
   useEffect(() => {
-    setDraftPermissions(permissions);
+    if (permissions.length > 0) {
+      setDraftPermissions(permissions);
+    }
   }, [permissions]);
 
   const handleCheckboxChange = (rowId: string, role: 'admin' | 'manager' | 'accountant' | 'salesStaff' | 'warehouseStaff') => {
@@ -54,18 +55,21 @@ export default function PermissionsView({
       onShowNotification('Bạn không có quyền đặt lại ma trận phân quyền.');
       return;
     }
-    onResetPermissions();
-    setDraftPermissions(permissions);
-    onShowNotification('Ma trận quyền đã được khôi phục về mặc định hệ thống.');
+    setDraftPermissions(INITIAL_PERMISSIONS);
+    onShowNotification('Ma trận quyền đã được khôi phục về mặc định hệ thống. Vui lòng Lưu để áp dụng.');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!canEdit) {
-      onShowNotification('Bạn không có quyền thay đổi ma trận phân quyền.');
+      onShowNotification('Bạn không có quyền lưu ma trận phân quyền.');
       return;
     }
-    onUpdatePermissions(draftPermissions);
-    onShowNotification('Chính sách bảo mật và quyền vai trò đã được lưu thành công.');
+    try {
+      await savePermissions.mutateAsync(draftPermissions);
+      onShowNotification('Ma trận phân quyền đã được lưu thành công vào CSDL.');
+    } catch (e: any) {
+      onShowNotification('Lưu phân quyền thất bại');
+    }
   };
 
   // Filter permission rows by both Search terms and Category tabs
@@ -134,11 +138,11 @@ export default function PermissionsView({
           
           <button
             onClick={handleSave}
-            disabled={!canEdit}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-600 text-white rounded-lg font-medium text-xs hover:bg-amber-700 transition-colors shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!canEdit || savePermissions.isPending}
           >
-            <Save size={14} />
-            Lưu Thay đổi
+            <Save size={13} />
+            {savePermissions.isPending ? 'Đang lưu...' : 'Lưu Thay đổi'}
           </button>
         </div>
       </div>

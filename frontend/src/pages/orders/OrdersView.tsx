@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   PackageOpen, Filter, Search, Plus, Download, X,
   Trash2, ShoppingCart, CheckSquare, Square, CalendarDays,
   RefreshCw, ChevronLeft, ChevronRight, LayersIcon
 } from 'lucide-react';
-import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
+import { useOrders, useCreateOrder, useUpdateOrderStatus, useDeleteOrder, useBulkUpdateOrderStatus } from '../../hooks/useOrders';
+import { useProducts } from '../../hooks/useProducts';
 
 interface Product {
   id: string;
@@ -53,10 +54,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
   onShowNotification: (msg: string, type?: 'success' | 'info' | 'error') => void;
   searchTerm: string;
 }) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
 
   // Filters
@@ -73,7 +71,7 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
   // Modals — new order
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
+
   const [selectedProducts, setSelectedProducts] = useState<OrderDetail[]>([]);
 
   // Modals — view / update / delete
@@ -85,53 +83,23 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id: string; code: string }>({ open: false, id: '', code: '' });
 
   const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
   const canUpdateStatus = user && ['Admin', 'Manager', 'Sales Staff'].includes(user.role);
   const canCreateOrder = user && ['Admin', 'Manager', 'Sales Staff'].includes(user.role);
   const canDeleteOrder = user && ['Admin', 'Manager'].includes(user.role);
   const canBulkUpdate = user && ['Admin', 'Manager'].includes(user.role);
   const isFinancialMasked = user && ['Warehouse Staff'].includes(user.role);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      params.set('pageSize', String(pageSize));
-      if (filters.status !== 'ALL') params.set('status', filters.status);
-      if (searchTerm) params.set('search', searchTerm);
-      if (filters.fromDate) params.set('fromDate', filters.fromDate);
-      if (filters.toDate) params.set('toDate', filters.toDate);
-      if (filters.createdBy) params.set('createdBy', filters.createdBy);
+  const ordersParams = { page, pageSize, status: filters.status, search: searchTerm, fromDate: filters.fromDate, toDate: filters.toDate, createdBy: filters.createdBy };
+  const { data: ordersData, isLoading: loading } = useOrders(ordersParams);
+  const orders = ordersData?.items ?? [];
+  const totalCount = ordersData?.totalCount ?? 0;
+  const { data: productsData = [] } = useProducts();
+  const products = productsData as Product[];
 
-      const res = await api.get(`/Orders?${params.toString()}`);
-      setOrders(res.data.items || res.data);
-      setTotalCount(res.data.totalCount || (res.data.items || res.data).length);
-    } catch (error) {
-      console.error(error);
-      onShowNotification('Lỗi khi tải danh sách đơn hàng', 'info');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, filters, searchTerm, onShowNotification]);
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const res = await api.get('/Products');
-      const data = res.data.items || res.data;
-      if (data && data.length > 0) setProducts(data);
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  useEffect(() => {
-    fetchProducts();
-    const id = token ? setInterval(fetchOrders, 30000) : null;
-    return () => { if (id) clearInterval(id); };
-  }, [token, fetchProducts]);
+  const createOrderMutation = useCreateOrder();
+  const updateStatusMutation = useUpdateOrderStatus();
+  const deleteOrderMutation = useDeleteOrder();
+  const bulkUpdateMutation = useBulkUpdateOrderStatus();
 
   // ── Bulk select helpers ──────────────────────────────────
   const allSelected = orders.length > 0 && orders.every(o => selectedIds.has(o.id));
@@ -151,16 +119,15 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
     if (selectedIds.size === 0) return;
     setBulkLoading(true);
     try {
-      const res = await api.post('/Orders/bulk-status-update', {
+      const res = await bulkUpdateMutation.mutateAsync({
         orderIds: Array.from(selectedIds),
         newStatus: bulkStatus,
         reason: bulkReason || undefined,
       });
-      onShowNotification(res.data.message || 'Cập nhật hàng loạt thành công!', 'success');
+      onShowNotification((res as any)?.message || 'Cập nhật hàng loạt thành công!', 'success');
       setSelectedIds(new Set());
       setShowBulkModal(false);
       setBulkReason('');
-      fetchOrders();
     } catch (err: any) {
       onShowNotification(err.response?.data?.message || 'Cập nhật hàng loạt thất bại', 'error');
     } finally {
@@ -184,9 +151,8 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
         orderStatus: 'Pending',
         orderDetails: selectedProducts.map(p => ({ productId: p.productId, quantity: p.quantity, unitPrice: p.unitPrice })),
       };
-      const res = await api.post('/Orders', payload);
+      await createOrderMutation.mutateAsync(payload as any);
       onShowNotification('Tạo đơn hàng thành công!', 'success');
-      setOrders(prev => [res.data, ...prev]);
       setShowNewOrderModal(false);
       setNewCustomerName('');
       setSelectedProducts([]);
@@ -199,9 +165,8 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
     e.preventDefault();
     if (!orderToUpdate || !newStatus) return;
     try {
-      await api.patch(`/Orders/${orderToUpdate.id}/status`, { status: newStatus, reason: updateReason });
+      await updateStatusMutation.mutateAsync({ orderId: orderToUpdate.id, payload: { status: newStatus, reason: updateReason } });
       onShowNotification('Cập nhật trạng thái thành công!', 'success');
-      setOrders(prev => prev.map(o => o.id === orderToUpdate.id ? { ...o, orderStatus: newStatus } : o));
       setShowUpdateStatusModal(false);
       setOrderToUpdate(null);
       setNewStatus('');
@@ -213,9 +178,8 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
 
   const handleDeleteOrder = async () => {
     try {
-      await api.delete(`/Orders/${confirmDelete.id}`);
+      await deleteOrderMutation.mutateAsync(confirmDelete.id);
       onShowNotification('Xóa đơn hàng thành công!', 'success');
-      setOrders(prev => prev.filter(o => o.id !== confirmDelete.id));
       setConfirmDelete({ open: false, id: '', code: '' });
     } catch (error) {
       onShowNotification('Xóa đơn hàng thất bại. Vui lòng kiểm tra quyền.', 'error');

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DollarSign, Play } from 'lucide-react';
 import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
+import { usePayroll, useCalculatePayroll } from '../../hooks/useHr';
 
 interface PayrollRecord {
   id: string;
@@ -20,36 +21,18 @@ interface PayrollViewProps {
 }
 
 export default function PayrollView({ onShowNotification }: PayrollViewProps) {
-  const [records, setRecords] = useState<PayrollRecord[]>([]);
   const user = useAuthStore((state) => state.user);
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [year, setYear] = useState<number>(new Date().getFullYear());
-  const [loading, setLoading] = useState(false);
-
-  const fetchPayroll = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/Hr/payroll?month=${month}&year=${year}`);
-      setRecords(response.data);
-    } catch (error) {
-      console.error('Error fetching payroll:', error);
-      onShowNotification('Lỗi khi tải bảng lương', 'info');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPayroll();
-  }, [month, year]);
+  const { data: recordsData, isLoading: loading } = usePayroll(month, year);
+  const records = recordsData as PayrollRecord[] ?? [];
+  const calculatePayrollMutation = useCalculatePayroll();
 
   const handleCalculatePayroll = async () => {
     if (!user) return;
     try {
-      // For demo, we just calculate for current user. In real app, HR calculates for all.
-      await api.post('/Hr/payroll/calculate', { userId: user.id, month, year });
+      await calculatePayrollMutation.mutateAsync({ userId: user.id, month, year });
       onShowNotification(`Tính lương tháng ${month}/${year} thành công!`, 'success');
-      fetchPayroll();
     } catch (error: any) {
       onShowNotification(error.response?.data?.message || 'Tính lương thất bại', 'info');
     }

@@ -38,9 +38,8 @@ import SessionTimeoutModal from './components/common/SessionTimeoutModal';
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 
-import { Employee, PermissionRow, Activity } from './types';
+import { Activity } from './types';
 import {
-  INITIAL_PERMISSIONS,
   INITIAL_ACTIVITIES
 } from './utils/data';
 import api from './api';
@@ -69,9 +68,6 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Core App states
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [permissions, setPermissions] = useState<PermissionRow[]>(INITIAL_PERMISSIONS);
-  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
 
   const token = useAuthStore((state) => state.token);
@@ -113,245 +109,23 @@ export default function App() {
     return 'Kinh doanh (Sales/CSKH)'; // Sales Staff default
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get('/Users');
-      const users = response.data.items || response.data;
-      const mappedEmployees: Employee[] = users.map((u: any) => {
-        const nameParts = u.fullName.split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-        const roleStr = mapRoleIdToRole(u.roleId);
-        return {
-          id: u.id,
-          firstName,
-          lastName,
-          email: u.email,
-          role: roleStr,
-          // IMPORTANT: always use the department from DB, not a derived mapping.
-          // mapRoleToDepartment is only used as fallback for old data.
-          department: u.department || mapRoleToDepartment(roleStr),
-          status: u.isActive ? 'Đang hoạt động' : 'Đã nghỉ việc',
-          avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase(),
-          salary: u.salary || 0
-        };
-      });
-      setEmployees(mappedEmployees);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      triggerToast('Tải danh sách nhân viên thất bại', 'info');
-    }
-  };
-
-  // Helper: convert flat API records to PermissionRow[] (frontend format)
-  const buildPermissionsFromApi = (records: Array<{ permissionKey: string; roleName: string; isGranted: boolean }>) => {
-    const permMap: Record<string, Partial<PermissionRow>> = {};
-    records.forEach(r => {
-      if (!permMap[r.permissionKey]) {
-        const base = INITIAL_PERMISSIONS.find(p => p.id === r.permissionKey);
-        permMap[r.permissionKey] = base
-          ? { ...base, admin: false, manager: false, accountant: false, salesStaff: false, warehouseStaff: false }
-          : { id: r.permissionKey, action: r.permissionKey, module: 'Finance', admin: false, manager: false, accountant: false, salesStaff: false, warehouseStaff: false };
-      }
-      const roleKey = {
-        'Admin': 'admin', 'Manager': 'manager', 'Accountant': 'accountant',
-        'Sales Staff': 'salesStaff', 'Warehouse Staff': 'warehouseStaff'
-      }[r.roleName];
-      if (roleKey) (permMap[r.permissionKey] as any)[roleKey] = r.isGranted;
-    });
-    return Object.values(permMap) as PermissionRow[];
-  };
-
-  // Helper: convert PermissionRow[] to flat records for API
-  const flattenPermissions = (rows: PermissionRow[]) => {
-    const items: Array<{ permissionKey: string; roleName: string; isGranted: boolean }> = [];
-    const roleMap: Array<[keyof PermissionRow, string]> = [
-      ['admin', 'Admin'], ['manager', 'Manager'], ['accountant', 'Accountant'],
-      ['salesStaff', 'Sales Staff'], ['warehouseStaff', 'Warehouse Staff']
-    ];
-    rows.forEach(row => {
-      roleMap.forEach(([key, roleName]) => {
-        items.push({ permissionKey: row.id, roleName, isGranted: !!row[key] });
-      });
-    });
-    return items;
-  };
-
-  const fetchPermissions = async () => {
-    try {
-      const res = await api.get('/Permissions');
-      const built = buildPermissionsFromApi(res.data);
-      if (built.length > 0) setPermissions(built);
-    } catch (e) {
-      console.warn('[App] Could not load permissions from API, using defaults.');
-    } finally {
-      setPermissionsLoaded(true);
-    }
-  };
-
   // On mount: validate token against backend (catches stale tokens after backend DB reset)
   const logout = useAuthStore((state) => state.logout);
   useEffect(() => {
     if (!token) return;
 
     api.get('/Auth/me')
-      .then(() => {
-        // Token is valid → fetch users AND permissions
-        fetchUsers();
-        fetchPermissions();
-      })
       .catch((err) => {
         const status = err?.response?.status;
         if (status === 401) {
           console.warn('[App] Token validation failed (401). Logging out.');
           logout();
           toast('Phiên đăng nhập đã hết hạn hoặc tài khoản thay đổi. Vui lòng đăng nhập lại.', { duration: 5000 });
-        } else {
-          fetchUsers();
-          fetchPermissions();
         }
       });
   }, [token]);
 
-
-  // State manipulation handlers
-  const handleAddEmployee = async (newEmpData: Omit<Employee, 'id' | 'avatarInitials'> & { password?: string }) => {
-    try {
-      const userPayload = {
-        fullName: `${newEmpData.firstName} ${newEmpData.lastName}`,
-        email: newEmpData.email,
-        roleId: mapRoleToRoleId(newEmpData.role),
-        department: newEmpData.department,
-        isActive: newEmpData.status !== 'Đã nghỉ việc',
-        salary: newEmpData.salary || 0
-      };
-      const response = await api.post('/Users', userPayload);
-      const generatedPassword = response.data.generatedPassword;
-
-      // Append to activities
-      const newActivity: Activity = {
-        id: `act-${Date.now()}`,
-        type: 'success',
-        title: 'Thêm nhân viên mới',
-        description: `${newEmpData.firstName} ${newEmpData.lastName} đã tham gia với vai trò ${newEmpData.role} tại bộ phận ${newEmpData.department}.`,
-        time: 'Vừa xong',
-        badgeText: 'Thành công'
-      };
-      setActivities((prev) => [newActivity, ...prev]);
-
-      toast.success(
-        (t) => (
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-sm">Thêm nhân viên thành công!</span>
-            <span className="text-xs">Mật khẩu khởi tạo của <b>{newEmpData.email}</b> là:</span>
-            <span className="font-mono bg-slate-100 px-2 py-1 rounded text-amber-700 text-center text-lg mt-1 select-all">{generatedPassword}</span>
-            <span className="text-[10px] text-slate-500 mt-1 italic">Mật khẩu này chỉ hiện 1 lần, hãy copy gửi cho nhân viên.</span>
-          </div>
-        ),
-        { duration: 15000 }
-      );
-
-      fetchUsers();
-    } catch (error: any) {
-      console.error('Error adding employee:', error);
-      triggerToast(error.response?.data?.message || 'Thêm nhân viên thất bại', 'info');
-    }
-  };
-
-  const handleDeactivateEmployee = async (id: string) => {
-    const targetEmployee = employees.find(e => e.id === id);
-    if (!targetEmployee) return;
-
-    try {
-      await api.patch(`/Users/${id}/deactivate`);
-
-      // Append to activities
-      const newActivity: Activity = {
-        id: `act-${Date.now()}`,
-        type: 'warning',
-        title: 'Đã cho nghỉ việc',
-        description: `${targetEmployee.firstName} ${targetEmployee.lastName} đã được đánh dấu là nghỉ việc.`,
-        time: 'Vừa xong',
-        badgeText: 'Cảnh báo'
-      };
-      setActivities((prev) => [newActivity, ...prev]);
-
-      triggerToast(`Đã chuyển nhân viên sang trạng thái nghỉ việc!`);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error deactivating employee:', error);
-      triggerToast('Thao tác thất bại', 'info');
-    }
-  };
-
-  const handleHardDeleteEmployee = async (id: string) => {
-    const targetEmployee = employees.find(e => e.id === id);
-    if (!targetEmployee) return;
-
-    try {
-      await api.delete(`/Users/${id}`);
-
-      // Append to activities
-      const newActivity: Activity = {
-        id: `act-${Date.now()}`,
-        type: 'warning',
-        title: 'Đã xóa bản ghi nhân viên',
-        description: `${targetEmployee.firstName} ${targetEmployee.lastName} đã bị xóa hoàn toàn khỏi hồ sơ hệ thống.`,
-        time: 'Vừa xong',
-        badgeText: 'Cảnh báo'
-      };
-      setActivities((prev) => [newActivity, ...prev]);
-
-      triggerToast(`Xóa nhân viên thành công!`);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error hard deleting employee:', error);
-      triggerToast('Xóa nhân viên thất bại (Chỉ Admin mới có quyền này)', 'info');
-    }
-  };
-
   const canEditPermissions = user?.role === 'Admin' || user?.role === 'Manager';
-
-  const handleUpdatePermissions = async (updatedPerms: PermissionRow[]) => {
-    if (!canEditPermissions) {
-      triggerToast('Bạn không có quyền thay đổi ma trận phân quyền.', 'info');
-      return;
-    }
-    // Optimistic update
-    setPermissions(updatedPerms);
-
-    try {
-      await api.put('/Permissions', flattenPermissions(updatedPerms));
-      // Append to activities
-      const newActivity: Activity = {
-        id: `act-${Date.now()}`,
-        type: 'info',
-        title: 'Cập nhật Ma trận Bảo mật',
-        description: 'Quyền hạn vai trò trên toàn hệ thống đã được lưu vào cơ sở dữ liệu.',
-        time: 'Vừa xong'
-      };
-      setActivities((prev) => [newActivity, ...prev]);
-      triggerToast('Lưu ma trận quyền thành công!');
-    } catch (e) {
-      triggerToast('Lưu ma trận quyền thất bại. Vui lòng thử lại.', 'info');
-      // Rollback
-      await fetchPermissions();
-    }
-  };
-
-  const handleResetPermissions = async () => {
-    if (!canEditPermissions) {
-      triggerToast('Bạn không có quyền đặt lại ma trận phân quyền.', 'info');
-      return;
-    }
-    setPermissions(INITIAL_PERMISSIONS);
-    try {
-      await api.put('/Permissions', flattenPermissions(INITIAL_PERMISSIONS));
-      triggerToast('Đã đặt lại ma trận quyền về mặc định!');
-    } catch (e) {
-      triggerToast('Đặt lại ma trận quyền thất bại.', 'info');
-    }
-  };
 
   if (!token) {
     return (
@@ -376,7 +150,6 @@ export default function App() {
         onOpenNewReport={() => setShowNewReportModal(true)}
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
-        permissions={permissions}
       />
 
       {/* 2. Main staging container (shifted left to clear fixed sidebar on desktop) */}
@@ -419,11 +192,6 @@ export default function App() {
 
             {currentTab === 'employees' && (
               <EmployeesView
-                employees={employees}
-                permissions={permissions}
-                onAddEmployee={handleAddEmployee}
-                onDeactivateEmployee={handleDeactivateEmployee}
-                onDeleteEmployee={handleHardDeleteEmployee}
                 onShowNotification={triggerToast}
                 searchTerm={searchTerm}
                 currentUserRole={user?.role}
@@ -440,9 +208,6 @@ export default function App() {
 
             {currentTab === 'permissions' && (
               <PermissionsView
-                permissions={permissions}
-                onUpdatePermissions={handleUpdatePermissions}
-                onResetPermissions={handleResetPermissions}
                 onShowNotification={triggerToast}
                 searchTerm={searchTerm}
                 canEdit={canEditPermissions}

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ClipboardCheck, Search, Filter } from 'lucide-react';
 import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
+import { useAttendance } from '../../hooks/useHr';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AttendanceRecord {
   id: string;
@@ -18,35 +20,18 @@ interface AttendanceViewProps {
 }
 
 export default function AttendanceView({ onShowNotification }: AttendanceViewProps) {
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const user = useAuthStore((state) => state.user);
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchAttendance = async (targetDate: string) => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/Hr/attendance/daily?date=${targetDate}`);
-      setRecords(response.data);
-    } catch (error) {
-      console.error('Error fetching attendance:', error);
-      onShowNotification('Lỗi khi tải dữ liệu chấm công', 'info');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.role === 'Admin' || user?.role === 'Manager') {
-      fetchAttendance(date);
-    }
-  }, [date, user]);
+  const canViewAttendance = user?.role === 'Admin' || user?.role === 'Manager';
+  const { data: recordsData, isLoading: loading } = useAttendance(date, canViewAttendance);
+  const records = recordsData as AttendanceRecord[] ?? [];
+  const qc = useQueryClient();
 
   const handleCheckIn = async () => {
     try {
       await api.post('/Hr/attendance/checkin', { userId: user?.id, notes: 'Check-in web' });
       onShowNotification('Check-in thành công!', 'success');
-      if (user?.role === 'Admin' || user?.role === 'Manager') fetchAttendance(date);
+      if (canViewAttendance) qc.invalidateQueries({ queryKey: ['attendance', date] });
     } catch (error: any) {
       onShowNotification(error.response?.data?.message || 'Check-in thất bại', 'info');
     }
@@ -56,7 +41,7 @@ export default function AttendanceView({ onShowNotification }: AttendanceViewPro
     try {
       await api.post('/Hr/attendance/checkout', { userId: user?.id, notes: 'Check-out web' });
       onShowNotification('Check-out thành công!', 'success');
-      if (user?.role === 'Admin' || user?.role === 'Manager') fetchAttendance(date);
+      if (canViewAttendance) qc.invalidateQueries({ queryKey: ['attendance', date] });
     } catch (error: any) {
       onShowNotification(error.response?.data?.message || 'Check-out thất bại', 'info');
     }

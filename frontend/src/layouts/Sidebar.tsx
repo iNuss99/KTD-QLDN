@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
+import { usePermissions } from '../hooks/usePermissions';
 import { PermissionRow } from '../types';
 
 interface SidebarProps {
@@ -28,7 +29,6 @@ interface SidebarProps {
   onOpenNewReport: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
-  permissions: PermissionRow[];
 }
 
 export default function Sidebar({
@@ -36,9 +36,9 @@ export default function Sidebar({
   setCurrentTab,
   onOpenNewReport,
   isOpenMobile = false,
-  onCloseMobile,
-  permissions,
+  onCloseMobile
 }: SidebarProps) {
+  const { data: permissions = [] } = usePermissions();
   const user = useAuthStore((state) => state.user);
 
   // Map backend role names to PermissionRow keys

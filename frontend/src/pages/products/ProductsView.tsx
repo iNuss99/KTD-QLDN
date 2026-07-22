@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Package, Search, Edit3, X, History, Save, AlertTriangle, Plus, Image as ImageIcon } from 'lucide-react';
-import api from '../../api';
 import { useAuthStore } from '../../store/authStore';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
+import { useProducts, useCreateProduct, useAdjustStock, useReceiveStock, useStockHistory } from '../../hooks/useProducts';
 
 interface Product {
     id: string;
@@ -27,12 +27,17 @@ interface StockHistory {
 }
 
 export default function ProductsView({ onShowNotification, searchTerm }: { onShowNotification: (msg: string, type?: 'success'|'info') => void, searchTerm: string }) {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: products = [], isLoading: loading } = useProducts();
+    const createProductMutation = useCreateProduct();
+    const adjustStockMutation = useAdjustStock();
+    const receiveStockMutation = useReceiveStock();
+    const [localSearch, setLocalSearch] = useState<string>(searchTerm || '');
+    const [historyProductId, setHistoryProductId] = useState<string | null>(null);
+    const { data: stockHistoryData = [] } = useStockHistory(historyProductId);
     
     // Auth context
     const user = useAuthStore((state) => state.user);
-    const canAdjustStock = user?.role === 'Warehouse Staff' || user?.role === 'Admin';
+    const canAdjustStock = user?.role === 'Warehouse Staff' || user?.role === 'Admin' || user?.role === 'Sales Staff';
     const canReceiveStock = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Accountant';
     const canCreateProduct = user?.role === 'Admin' || user?.role === 'Manager';
     const isFinancialMasked = user && ['Sales Staff', 'Warehouse Staff'].includes(user.role);
@@ -51,7 +56,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
 
     // History modal state
     const [showHistoryModal, setShowHistoryModal] = useState(false);
-    const [stockHistory, setStockHistory] = useState<StockHistory[]>([]);
+    const stockHistory = stockHistoryData as StockHistory[];
 
     // Add Product modal state
     const [showAddModal, setShowAddModal] = useState(false);
@@ -65,21 +70,7 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
         imageUrl: ''
     });
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
 
-    const fetchProducts = async () => {
-        try {
-            const res = await api.get('/Products');
-            setProducts(res.data.items || res.data);
-        } catch (error) {
-            console.error(error);
-            onShowNotification('Lỗi khi tải danh sách sản phẩm', 'info');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleAddProduct = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,10 +82,9 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
         }
         
         try {
-            await api.post('/Products', { ...newProduct, sku: finalSku });
+            await createProductMutation.mutateAsync({ ...newProduct, sku: finalSku });
             onShowNotification('Thêm sản phẩm thành công!', 'success');
             setShowAddModal(false);
-            fetchProducts();
         } catch (error) {
             console.error(error);
             onShowNotification('Lỗi khi thêm sản phẩm. Có thể mã SKU đã tồn tại.', 'info');
@@ -109,15 +99,11 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
         }
 
         try {
-            await api.put(`/Products/${selectedProduct.id}/stock`, {
-                quantity: quantityChange,
-                reason
-            });
+            await adjustStockMutation.mutateAsync({ productId: selectedProduct.id, payload: { quantityChange, reason } });
             onShowNotification('Cập nhật tồn kho thành công!', 'success');
             setShowAdjustModal(false);
             setQuantityChange(0);
             setReason('');
-            fetchProducts();
         } catch (error) {
             console.error(error);
             onShowNotification('Lỗi khi cập nhật tồn kho. Kiểm tra quyền của bạn.', 'info');
@@ -133,37 +119,30 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
         }
 
         try {
-            await api.put(`/Products/${selectedProduct.id}/stock`, {
-                quantity: selectedProduct.stockQuantity + receiveQuantity,
+            await receiveStockMutation.mutateAsync({ productId: selectedProduct.id, payload: {
+                quantityChange: selectedProduct.stockQuantity + receiveQuantity,
                 reason: receiveReason,
                 newCostPrice: newCostPrice > 0 ? newCostPrice : undefined
-            });
+            }});
             onShowNotification('Nhập hàng thành công!', 'success');
             setShowReceiveModal(false);
             setReceiveQuantity(0);
             setNewCostPrice(0);
             setReceiveReason('Nhập hàng mới');
-            fetchProducts();
         } catch (error) {
             console.error(error);
             onShowNotification('Lỗi khi nhập hàng.', 'info');
         }
     };
 
-    const handleViewHistory = async (productId: string) => {
-        try {
-            const res = await api.get(`/Products/${productId}/stock-history`);
-            setStockHistory(res.data);
-            setShowHistoryModal(true);
-        } catch (error) {
-            console.error(error);
-            onShowNotification('Lỗi khi tải lịch sử tồn kho', 'info');
-        }
+    const handleViewHistory = (productId: string) => {
+        setHistoryProductId(productId);
+        setShowHistoryModal(true);
     };
 
     const filteredProducts = products.filter(p => 
-        p.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+        p.productName.toLowerCase().includes(localSearch.toLowerCase()) || 
+        p.sku.toLowerCase().includes(localSearch.toLowerCase())
     );
 
     return (
@@ -194,8 +173,8 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
                             type="text" 
                             placeholder="Tìm kiếm theo mã SKU hoặc tên sản phẩm..."
                             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
-                            value={searchTerm}
-                            onChange={() => {}}
+                            value={localSearch}
+                            onChange={(e) => setLocalSearch(e.target.value)}
                         />
                     </div>
                 </div>
