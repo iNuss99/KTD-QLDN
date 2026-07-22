@@ -141,8 +141,8 @@ export default function ProductsView({ onShowNotification, searchTerm }: { onSho
     };
 
     const filteredProducts = products.filter(p => 
-        p.productName.toLowerCase().includes(localSearch.toLowerCase()) || 
-        p.sku.toLowerCase().includes(localSearch.toLowerCase())
+        (p.productName || '').toLowerCase().includes((localSearch || '').toLowerCase()) || 
+        (p.sku || '').toLowerCase().includes((localSearch || '').toLowerCase())
     );
 
     return (

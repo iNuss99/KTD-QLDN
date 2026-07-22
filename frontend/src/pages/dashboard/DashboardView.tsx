@@ -67,8 +67,8 @@ export default function DashboardView({
   const marginTotalPages = Math.ceil(((marginRaw as any)?.totalCount ?? 0) / marginPageSize) || 1;
 
   const filteredActivities = activities.filter(act => 
-    act.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    act.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (act.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+    (act.description || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   const formatVND = (value: number) => {

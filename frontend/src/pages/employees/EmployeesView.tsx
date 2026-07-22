@@ -105,11 +105,11 @@ export default function EmployeesView({
   const filteredEmployees = employees.filter((emp) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
-      emp.firstName.toLowerCase().includes(term) ||
-      emp.lastName.toLowerCase().includes(term) ||
-      emp.email.toLowerCase().includes(term) ||
-      emp.role.toLowerCase().includes(term) ||
-      emp.department.toLowerCase().includes(term);
+      (emp.firstName || '').toLowerCase().includes(term) ||
+      (emp.lastName || '').toLowerCase().includes(term) ||
+      (emp.email || '').toLowerCase().includes(term) ||
+      (emp.role || '').toLowerCase().includes(term) ||
+      (emp.department || '').toLowerCase().includes(term);
       
     const matchesDepartment = departmentFilter === 'Tất cả' || emp.department === departmentFilter;
     

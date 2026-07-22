@@ -74,7 +74,7 @@ export default function PermissionsView({
 
   // Filter permission rows by both Search terms and Category tabs
   const filteredRows = draftPermissions.filter((row) => {
-    const matchesSearch = row.action.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (row.action || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesModule = activeModuleFilter === 'All' || row.module === activeModuleFilter;
     return matchesSearch && matchesModule;
   });

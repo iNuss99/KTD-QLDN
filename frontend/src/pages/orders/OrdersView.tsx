@@ -221,8 +221,9 @@ export default function OrdersView({ onShowNotification, searchTerm }: {
       cancelled: 'px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-bold uppercase',
     };
     const STATUS_VI: Record<string, string> = { delivered:'Hoàn thành', shipped:'Đang giao', confirmed:'Xác nhận', pending:'Mới tạo', cancelled:'Đã hủy' };
-    const cls = map[status.toLowerCase()] || 'px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-bold uppercase';
-    return <span className={cls}>{STATUS_VI[status.toLowerCase()] || status}</span>;
+    const safeStatus = (status || '').toLowerCase();
+    const cls = map[safeStatus] || 'px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-bold uppercase';
+    return <span className={cls}>{STATUS_VI[safeStatus] || status}</span>;
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
