@@ -1,6 +1,9 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace techretail_api.Services
 {
@@ -8,9 +11,8 @@ namespace techretail_api.Services
     {
         private readonly IConfiguration _config;
         private readonly ILogger<EmailService> _logger;
+        private static readonly HttpClient _httpClient = new HttpClient();
 
-        // Config keys expected in appsettings.json under "Email":
-        //   SmtpHost, SmtpPort, FromAddress, FromName, Username, Password, EnableSsl
         public EmailService(IConfiguration config, ILogger<EmailService> logger)
         {
             _config = config;
@@ -55,53 +57,46 @@ namespace techretail_api.Services
 
         private async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
         {
-            var smtpHost = _config["Email:SmtpHost"];
+            // Note: We are using the "Password" config field to store the Brevo API Key
+            var apiKey = _config["Email:Password"]; 
             var fromAddress = _config["Email:FromAddress"];
-            var username = _config["Email:Username"];
-            var password = _config["Email:Password"];
+            var fromName = _config["Email:FromName"] ?? "KTD System";
 
-            // If SMTP is not configured → log only (dev/demo mode)
-            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(fromAddress))
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(fromAddress))
             {
-                _logger.LogWarning("[EMAIL - NOT SENT - SMTP not configured]");
-                _logger.LogWarning("  To:      {To}", toEmail);
-                _logger.LogWarning("  Subject: {Subject}", subject);
-                _logger.LogWarning("  Body snippet: {Snippet}", htmlBody.Replace("\n", " ").Substring(0, Math.Min(120, htmlBody.Length)));
+                _logger.LogWarning("[EMAIL - NOT SENT - API Key not configured]");
                 return;
             }
 
-            int.TryParse(_config["Email:SmtpPort"], out int smtpPort);
-            if (smtpPort == 0) smtpPort = 587;
-
-            bool.TryParse(_config["Email:EnableSsl"], out bool enableSsl);
-            if (!bool.TryParse(_config["Email:EnableSsl"], out _)) enableSsl = true;
-
-            var fromName = _config["Email:FromName"] ?? "KTD System";
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(fromName, fromAddress));
-            message.To.Add(MailboxAddress.Parse(toEmail));
-            message.Subject = subject;
-            message.Body = new TextPart("html") { Text = htmlBody };
-
             try
             {
-                using var client = new SmtpClient();
-                var secureOption = enableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None;
-                await client.ConnectAsync(smtpHost, smtpPort, secureOption);
-
-                if (!string.IsNullOrWhiteSpace(username))
+                var payload = new
                 {
-                    await client.AuthenticateAsync(username, password);
-                }
+                    sender = new { name = fromName, email = fromAddress },
+                    to = new[] { new { email = toEmail } },
+                    subject = subject,
+                    htmlContent = htmlBody
+                };
 
-                await client.SendAsync(message);
-                await client.DisconnectAsync(true);
-                _logger.LogInformation("[EMAIL SENT] To: {To} | Subject: {Subject}", toEmail, subject);
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                request.Headers.Add("api-key", apiKey);
+                request.Headers.Add("accept", "application/json");
+                request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("[EMAIL SENT] To: {To} | Subject: {Subject}", toEmail, subject);
+                }
+                else
+                {
+                    var errorResponse = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("[EMAIL FAILED] To: {To} | StatusCode: {StatusCode} | Response: {Response}", toEmail, response.StatusCode, errorResponse);
+                }
             }
             catch (Exception ex)
             {
-                // Log but don't throw — email failure should not block user creation
                 _logger.LogError(ex, "[EMAIL FAILED] To: {To} | Error: {Message}", toEmail, ex.Message);
             }
         }
