@@ -5,7 +5,38 @@ import api from '../api';
 
 export const fetchUsers = async () => {
   const res = await api.get('/Users');
-  return res.data.items ?? res.data ?? [];
+  const rawData = res.data.items ?? res.data ?? [];
+  
+  const mapRoleIdToName = (roleId: number) => {
+    switch(roleId) {
+      case 1: return 'Admin';
+      case 2: return 'Manager';
+      case 3: return 'Accountant';
+      case 4: return 'Sales Staff';
+      case 5: return 'Warehouse Staff';
+      default: return 'Sales Staff';
+    }
+  };
+
+  return rawData.map((u: any) => {
+    const parts = (u.fullName || '').trim().split(' ');
+    const lastName = parts.length > 1 ? parts.pop() : '';
+    const firstName = parts.join(' ');
+    const roleName = u.role?.roleName || mapRoleIdToName(u.roleId);
+    
+    return {
+      id: u.id,
+      firstName: firstName || 'Chưa cập nhật',
+      lastName: lastName,
+      email: u.email,
+      role: roleName,
+      department: u.department || 'Kinh doanh (Sales/CSKH)',
+      status: u.isActive ? 'Đang hoạt động' : 'Đã nghỉ việc',
+      avatarUrl: u.avatarUrl,
+      avatarInitials: ((firstName || 'U').charAt(0) + (lastName ? lastName.charAt(0) : '')).toUpperCase(),
+      salary: u.salary
+    };
+  });
 };
 
 export const createUser = async (payload: { fullName: string; email: string; roleId: number; department?: string; salary?: number }) => {
