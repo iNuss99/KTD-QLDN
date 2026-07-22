@@ -8,11 +8,13 @@ namespace techretail_api.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IEmailService _emailService;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IRepository<User> userRepository, IEmailService emailService)
+        public UserService(IRepository<User> userRepository, IEmailService emailService, ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<PagedResult<User>> GetAllUsersAsync(int page = 1, int pageSize = 50, string? departmentFilter = null, int? roleIdFilter = null, bool? isActiveFilter = null)
@@ -84,8 +86,15 @@ namespace techretail_api.Services
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
 
-            // Send welcome email (fire-and-forget style; errors are logged, not thrown)
-            _ = _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, generatedPassword);
+            // Send welcome email
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, generatedPassword);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}", user.Email);
+            }
 
             return (user, generatedPassword);
         }
@@ -147,7 +156,14 @@ namespace techretail_api.Services
             await _userRepository.SaveChangesAsync();
 
             // Notify user of password reset via email
-            _ = _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, generatedPassword);
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, generatedPassword);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
+            }
 
             return generatedPassword;
         }
