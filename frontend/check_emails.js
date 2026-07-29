@@ -1,0 +1,1 @@
+const { Client } = require('pg'); const c = new Client('postgres://techretail_owner:8U3H4W9MkqYt@ep-curly-recipe-a1a1z8n3.ap-southeast-1.aws.neon.tech/techretail?sslmode=require'); c.connect().then(()=>c.query('SELECT count(*) FROM 'Users' WHERE 'Email' != LOWER('Email')')).then(r=>console.log('Uppercase emails: ', r.rows[0].count)).catch(console.error).finally(()=>c.end())
