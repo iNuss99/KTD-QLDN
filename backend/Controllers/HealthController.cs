@@ -1,10 +1,10 @@
 using System.Diagnostics;
-using backend.Infrastructure.Data;
+using techretail_api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Controllers
+namespace techretail_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
