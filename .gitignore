@@ -1,0 +1,28 @@
+# Backend build output
+backend/bin/
+backend/obj/
+backend/out/
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+
+# Environment files with secrets — NEVER commit these
+backend/appsettings*.json
+frontend/.env*
+
+# IDE
+.vs/
+.vscode/
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+backend/test.ps1
+backend/techretail-api.http
+
+# Markdown and documentation files
+*.md
