@@ -1,0 +1,34 @@
+name: Ping Render Backend to Prevent Cold Start
+
+on:
+  schedule:
+    # Chạy mỗi 14 phút, từ 00:00 UTC đến 15:00 UTC (tương đương 7:00 sáng đến 22:59 tối giờ Việt Nam)
+    # Lý do chọn 14 phút: Render Sleep sau 15 phút không hoạt động. Ping ở phút 14 giúp né sleep.
+    # Ước tính số phút Actions cho Private Repo:
+    # - 1 tiếng chạy 4 lần (phút 0, 14, 28, 42).
+    # - Chạy 16 tiếng mỗi ngày (từ 00:00 đến 15:00 UTC).
+    # - 4 x 16 = 64 lần chạy/ngày = ~1920 lần chạy/tháng.
+    # - GitHub Actions làm tròn 1 lần chạy (dù chỉ vài giây) = 1 phút billable.
+    # - Tổng: 1920 phút < 2000 phút Free của GitHub. Nằm trong ngưỡng an toàn!
+    - cron: '*/14 0-15 * * *'
+  
+  # Cho phép chạy thủ công để test từ tab Actions
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send GET request to Health Endpoint
+        run: |
+          echo "Pinging Backend to keep it alive (and wake up Neon DB)..."
+          # -s: Silent mode, không in bừa bãi progress
+          # -S: Vẫn show lỗi nếu curl gặp vấn đề
+          # -m 60: Đặt timeout là 60 giây vì nếu bị Cold Start thì Render/Neon cần tới 30-40s để boot
+          # --retry 2: Thử lại 2 lần nếu request bị timeout
+          curl -s -S -m 60 --retry 2 https://ktd-ktd-api-sg-vn.onrender.com/api/health
+          echo -e "\n[✔] Ping hoàn tất!"
+        
+        # (Quan trọng) Không làm fail cả workflow nếu server lỡ sập lúc đang ping
+        # Tránh việc GitHub gửi email thông báo đỏ liên tục gây khó chịu
+        continue-on-error: true
